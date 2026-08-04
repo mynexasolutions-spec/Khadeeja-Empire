@@ -1,0 +1,862 @@
+Important findings
+- The repository is empty except for assets/.
+- instagram.json contains 63 scraped posts.
+- Local media is available in assets/images/ and assets/videos/, named by Instagram post ID.
+- Categories inferred from the content: Short Kurtis, Co-ord Sets, Tops, Dresses, Resort & Whites, New Arrivals, and Everyday Edit.
+- No reliable prices were found. Use clearly marked demo prices in one central data file until the client provides the actual price list.
+- Use Sakhe only as a structural and visual reference. Do not copy its logo, text, images, source code, or exact branding.
+You are a senior frontend engineer, ecommerce UX designer, visual designer, and accessibility specialist.
+
+Build a high-fidelity frontend prototype for “Khadeeja Empire”, an elegant Indian womenswear ecommerce brand.
+
+REFERENCE:
+Study https://sakhe.in/ for information architecture and interaction patterns only.
+
+PROJECT CONTEXT:
+The current repository is empty except for:
+
+C:\MyFile\Study material\Khadeeja-Empire\assets\logo.jpeg
+C:\MyFile\Study material\Khadeeja-Empire\assets\images\
+C:\MyFile\Study material\Khadeeja-Empire\assets\videos\
+C:\MyFile\InstagramDownloader\instagram.json
+
+The local images and videos are owned client assets or assets supplied for this prototype. Use local media only. Do not depend on Instagram CDN URLs.
+
+PROJECT GOAL:
+Create a polished, editorial, mobile-first fashion storefront that feels more refined and easier to shop than the reference site while retaining its image-led luxury fashion experience.
+
+This is a FRONTEND PROTOTYPE only.
+
+Do not implement:
+- Real payments
+- Real authentication
+- Real inventory
+- Real order processing
+- A production database
+- Admin dashboard
+- External ecommerce APIs
+
+Implement realistic frontend interactions with local mock data and localStorage persistence.
+
+==================================================
+NON-NEGOTIABLE RULES
+==================================================
+
+Do not generate new images.
+
+Do not use remote Instagram image or video URLs.
+
+Do not copy Sakhe’s:
+- Logo
+- Product names
+- Brand copy
+- Images
+- CSS
+- Source code
+- Exact typography
+- Exact visual identity
+
+Use Sakhe only for:
+- Editorial page rhythm
+- Full-width hero storytelling
+- Minimal navigation
+- Collection tiles
+- Product carousels
+- Brand story sections
+- Fashion-focused spacing
+
+Use the Khadeeja Empire logo from the supplied local asset.
+
+Do not invent final prices, delivery promises, return policies, fabric claims, or discount claims.
+
+The Instagram data contains malformed emoji and encoding characters. Clean captions before using them. Do not display corrupted replacement characters such as “�”.
+
+If a product detail is unknown, use editable prototype data and add a clear developer comment indicating that the client must confirm it.
+
+At the end of every phase:
+- Run the relevant checks.
+- Report files created or changed.
+- Report known limitations.
+- Stop and wait for the instruction “CONTINUE TO PHASE N”.
+
+==================================================
+TECHNOLOGY
+==================================================
+
+Use:
+
+- Next.js App Router
+- React
+- TypeScript
+- Tailwind CSS v4
+- CSS custom properties for design tokens
+- next/image for local images
+- next/font for typography
+- Lucide React for icons
+- Zod for validating mock form input
+- Playwright for end-to-end smoke tests
+- Vitest or the project’s standard test runner for unit tests
+
+Use Server Components by default.
+
+Use Client Components only for:
+- Hero carousel
+- Mobile navigation
+- Search drawer
+- Cart drawer
+- Cart state
+- Product options
+- Forms
+- Toasts
+- Interactive media controls
+
+Do not place the entire application in one page component.
+
+==================================================
+DESIGN DIRECTION
+==================================================
+
+Brand personality:
+
+- Elegant
+- Feminine
+- Contemporary
+- Rooted in Indian craft
+- Warm
+- Confident
+- Wearable
+- Editorial, but still easy to shop
+
+Use the supplied logo’s warm parchment and taupe tones as the starting point.
+
+Suggested accessible palette:
+
+- Parchment background: #F4EBDD
+- Paper surface: #FBF8F2
+- Ink: #2D2520
+- Muted text: #6E5E53
+- Terracotta: #8F4338
+- Deep terracotta: #6F302A
+- Brass accent: #AD8150
+- Soft border: #D7C7B7
+- White: #FFFFFF
+
+Use dark ink for important text and buttons. Do not place low-contrast beige text on beige backgrounds.
+
+Typography:
+
+- Display headings: Cormorant Garamond or another elegant editorial serif
+- Body and interface: DM Sans, Manrope, or another clean sans-serif
+- Use no more than two font families
+- Use uppercase labels sparingly with letter spacing
+- Use fluid typography with clamp()
+- Maintain readable line heights
+
+Visual language:
+
+- Warm full-bleed photography
+- Large editorial headlines
+- Thin borders
+- Minimal shadows
+- Deliberate whitespace
+- Slightly squared or softly rounded image containers
+- No generic SaaS cards
+- No excessive gradients
+- No loud neon colors
+- No unnecessary glassmorphism
+- No excessive rounded pills
+- No emoji in the main interface
+
+The layout should feel like a premium independent fashion label, not a marketplace template.
+
+==================================================
+CONTENT AND ASSET MODEL
+==================================================
+
+First inspect all local media.
+
+Copy or expose the assets through:
+
+public/assets/logo.jpeg
+public/assets/images/
+public/assets/videos/
+
+Keep the original assets folder untouched.
+
+Use the Instagram JSON only as a content reference and metadata source.
+
+Create a central typed catalog file, such as:
+
+content/catalog.ts
+
+Create a central Instagram/editorial content file, such as:
+
+content/instagram.ts
+
+Use a typed model similar to:
+
+Product:
+- id
+- slug
+- name
+- category
+- collection
+- description
+- images
+- video
+- price
+- currency
+- priceStatus
+- sizes
+- tags
+- availability
+- sourcePostId
+- sourceUrl
+- isPrototypeData
+
+Price rules:
+
+- currency is INR
+- use a central demo price map
+- mark demo prices with priceStatus: “demo”
+- make replacing demo prices a one-file change
+- do not infer prices from Instagram likes, views, captions, or the Sakhe website
+- do not present demo prices as final client-approved prices
+
+Use the following initial category structure:
+
+- Short Kurtis
+- Co-ord Sets
+- Everyday Tops
+- Dresses
+- Resort & Whites
+- New Arrivals
+- The Everyday Edit
+
+Use tags for:
+
+- Floral
+- Paisley
+- White
+- Halter
+- Casual
+- Ethnic
+- Indo-Western
+- Summer
+- Travel
+- Banaras-inspired
+- Statement
+- Minimal
+
+These categories are inferred from the supplied Instagram content and must remain easy to rename.
+
+Use local imagery for:
+- Hero campaigns
+- Product cards
+- Product detail galleries
+- Editorial sections
+- Social media sections
+- Video posters
+
+Do not show every scraped post as a product. Curate the strongest images into products and use the remaining media as editorial or social content.
+
+==================================================
+ROUTE STRUCTURE
+==================================================
+
+Create these routes:
+
+/                         Homepage
+/shop                     All products
+/collections/[slug]       Collection page
+/products/[slug]          Product detail
+/cart                     Full cart page
+/checkout                 Frontend-only checkout review
+/search                   Search results
+/about                    Brand story
+/contact                  Contact form
+/shipping-returns         Editable shipping and returns information
+/not-found                Branded 404 page
+
+==================================================
+PHASE 0: AUDIT AND CONTENT PLAN
+==================================================
+
+Before writing UI code:
+
+- Inspect every file in assets/images.
+- Inspect every file in assets/videos.
+- Inspect assets/logo.jpeg.
+- Read instagram.json.
+- Count available local images and videos.
+- Match local filenames to Instagram post IDs.
+- Identify product categories from captions and hashtags.
+- Identify repeated posts and duplicate media.
+- Separate product imagery from lifestyle/editorial imagery.
+- Normalize malformed caption encoding.
+- Create an asset manifest.
+- Create a draft product catalog using only local assets.
+- Mark unknown prices, sizes, fabrics, and availability as prototype data.
+- Do not invent final commercial claims.
+
+Deliverable:
+
+- Asset manifest
+- Draft catalog model
+- Category list
+- List of client information still required
+- No polished UI yet
+
+Acceptance criteria:
+
+- Every displayed asset has a local path.
+- No browser-facing content depends on Instagram CDN URLs.
+- Missing product information is explicitly marked as prototype data.
+- No corrupted text is displayed.
+
+==================================================
+PHASE 1: PROJECT FOUNDATION
+==================================================
+
+Scaffold the application.
+
+Create:
+
+- Next.js App Router structure
+- TypeScript configuration
+- Tailwind CSS v4 setup
+- Global CSS
+- Design token file or CSS variables
+- Shared layout
+- Metadata
+- Utility functions
+- Basic error, loading, and not-found states
+- Central content and catalog files
+
+Create reusable primitives:
+
+- Button
+- IconButton
+- Container
+- SectionHeading
+- ImageWithFallback
+- Drawer
+- Dialog
+- Accordion
+- ProductCard
+- ProductGrid
+- MediaCarousel
+- Toast
+
+Use semantic component APIs and avoid giant components with many boolean props.
+
+Acceptance criteria:
+
+- The app starts successfully.
+- The homepage route renders.
+- TypeScript passes.
+- Linting passes.
+- Local logo renders.
+- No external image URL is required.
+
+==================================================
+PHASE 2: DESIGN SYSTEM
+==================================================
+
+Implement the Khadeeja Empire visual system.
+
+Create semantic tokens for:
+
+- Background
+- Elevated surface
+- Text
+- Muted text
+- Border
+- Primary action
+- Primary action hover
+- Accent
+- Focus ring
+- Spacing
+- Typography
+- Motion durations
+- Border radius
+- Shadows
+
+Implement:
+
+- Responsive typography
+- 4px and 8px spacing rhythm
+- Accessible focus states
+- Responsive containers
+- Fluid section spacing
+- Consistent button variants
+- Consistent image aspect ratios
+- Reduced-motion styles
+
+Use:
+- Mobile-first CSS
+- CSS Grid for content grids
+- Flexbox for navigation and controls
+- Container queries where helpful
+- Minimum 44px touch targets
+
+Acceptance criteria:
+
+- All pages use tokens rather than random color values.
+- Text contrast meets WCAG AA.
+- Focus indicators are visible.
+- The design works at 360px, 390px, 768px, 1024px, and 1440px widths.
+
+==================================================
+PHASE 3: GLOBAL STOREFRONT SHELL
+==================================================
+
+Build the shared shell inspired by the reference site but branded for Khadeeja Empire.
+
+Header requirements:
+
+- Thin announcement bar
+- Desktop navigation
+- Centered Khadeeja Empire logo
+- Search button
+- Cart button with item count
+- Mobile menu button
+- Sticky behavior
+- Transparent-over-hero state
+- Solid state after scrolling
+- Keyboard-accessible navigation
+- Accessible mobile drawer
+
+Desktop navigation:
+
+- Shop
+- Collections
+- Story
+- Contact
+
+Shop mega menu:
+
+- All Products
+- Short Kurtis
+- Co-ord Sets
+- Everyday Tops
+- Dresses
+- Resort & Whites
+- New Arrivals
+
+Mobile navigation:
+
+- Full-width or side drawer
+- Clear close button
+- Escape key support
+- Focus management
+- No body scroll while open
+
+Build:
+
+- Search drawer
+- Cart drawer
+- Footer
+- Newsletter form
+- Social link area
+- Skip-to-content link
+
+Use editable placeholder copy where client policies or claims are not confirmed.
+
+Acceptance criteria:
+
+- Navigation works with keyboard only.
+- Mobile menu opens and closes correctly.
+- Search drawer has a labelled input.
+- Cart count updates correctly.
+- Drawer focus is trapped while open.
+- Escape closes open drawers.
+
+==================================================
+PHASE 4: HOMEPAGE
+==================================================
+
+Build a highly visual editorial homepage.
+
+Homepage order:
+
+1. Announcement bar
+2. Transparent editorial header
+3. Full-bleed hero carousel
+4. Brand introduction
+5. Featured collection grid
+6. Latest product rail
+7. Craft and story section
+8. Values section
+9. Local video or social editorial strip
+10. Newsletter section
+11. Footer
+
+Hero carousel:
+
+- Use three local campaigns
+- Use local images or muted local videos
+- Use short editable copy
+- Include category CTA
+- Include previous and next controls
+- Include slide indicators
+- Include pause/play control
+- Support keyboard navigation
+- Auto-rotate only when reduced motion is not requested
+- Do not autoplay sound
+- Use local poster images for videos
+- Use 70dvh on mobile and approximately 80vh on desktop
+- Keep text readable over photography with a subtle controlled overlay or solid text panel
+
+Suggested editable hero themes:
+
+- “Tradition, cut for today.” for Short Kurtis
+- “One set. Endless moments.” for Co-ord Sets
+- “Light layers, lasting impressions.” for Resort & Whites
+
+Brand introduction:
+
+Use a centered editorial section with a short statement such as:
+
+“Rooted in Indian craft. Designed for the way women dress now.”
+
+Mark all brand claims as editable until approved by the client.
+
+Collection grid:
+
+Show six image-led collection tiles:
+
+- Short Kurtis
+- Co-ord Sets
+- Everyday Tops
+- Dresses
+- Resort & Whites
+- New Arrivals
+
+Each tile must have:
+
+- Local image
+- Accessible alt text
+- Collection name
+- Explore link
+- Hover/focus state
+- Mobile-friendly layout
+
+Latest product rail:
+
+- Horizontal scroll on mobile
+- Five or six curated products
+- Product image
+- Name
+- Prototype price
+- Category
+- View product link
+- Keyboard-accessible controls
+
+Craft/story section:
+
+- Use local lifestyle imagery
+- Explain the brand’s point of view without inventing unverified claims
+- Use editable copy about modern Indian dressing, comfort, and craft
+
+Values section:
+
+Use concise values such as:
+
+- Easy silhouettes
+- Crafted details
+- Made to be worn your way
+
+Use CSS or typography for decoration instead of generating new image assets.
+
+Acceptance criteria:
+
+- Homepage feels editorial and premium.
+- The first viewport loads quickly.
+- Hero images are optimized.
+- No horizontal overflow occurs.
+- Every CTA works.
+- All content remains readable on mobile.
+
+==================================================
+PHASE 5: SHOP AND COLLECTION PAGES
+==================================================
+
+Build the shop experience.
+
+Shop page requirements:
+
+- Page title
+- Product count
+- Category filter
+- Price filter using demo prices
+- Tag filters
+- Sort control
+- Mobile filter drawer
+- Responsive product grid
+- Empty state
+- No-results state
+- Search-friendly URL parameters
+- Clear filters action
+
+Product grid:
+
+- Two columns on small mobile
+- Two or three columns on tablet
+- Four columns on desktop
+- Consistent image ratio
+- Lazy-load below-the-fold images
+- Use next/image sizes correctly
+
+Product cards:
+
+- Local image
+- Optional hover image if available
+- Product name
+- Category
+- Demo price state
+- New or featured badge only when present in data
+- View details link
+- Quick add only if a size can be selected accessibly
+
+Collection pages:
+
+- Collection title
+- Short editable description
+- Collection hero image
+- Product grid
+- Filter and sort controls
+- Related collection links
+
+Acceptance criteria:
+
+- Filtering works without a backend.
+- Sorting works.
+- Search works.
+- Product links use stable slugs.
+- Product cards are keyboard accessible.
+- There are no broken asset paths.
+
+==================================================
+PHASE 6: PRODUCT DETAIL AND CART
+==================================================
+
+Product detail page:
+
+- Breadcrumbs
+- Responsive media gallery
+- Image thumbnails
+- Optional video item
+- Product name
+- Category
+- Prototype price
+- Product description
+- Size selector
+- Quantity selector
+- Add to bag button
+- Buy now button that leads to prototype checkout
+- Details accordion
+- Fit and care information
+- Shipping information marked editable
+- Related products
+
+Cart behavior:
+
+- Use a reducer or small cart context
+- Persist cart to localStorage
+- Add product with selected size
+- Update quantity
+- Remove item
+- Clear cart
+- Calculate subtotal
+- Show item count
+- Show cart drawer
+- Show full cart page
+- Show empty cart state
+- Show toast after adding an item
+- Announce cart changes with aria-live
+
+Validation:
+
+- Size is required when the product has sizes.
+- Quantity cannot be lower than one.
+- Invalid form states must be visible and announced.
+- Demo prices must be clearly represented in the data layer.
+
+Checkout prototype:
+
+- Contact fields
+- Shipping fields
+- Order summary
+- Demo payment section
+- “Place demo order” button
+- Confirmation state
+- Clear “Frontend prototype: no real order was placed” messaging
+
+Do not collect real payment information.
+
+Acceptance criteria:
+
+- A user can browse to a product.
+- A user can select a size.
+- A user can add the product to cart.
+- The cart count updates.
+- Refreshing the page preserves the cart.
+- Quantity updates recalculate subtotal.
+- The checkout prototype ends in a confirmation state without calling a payment service.
+
+==================================================
+PHASE 7: SUPPORTING PAGES
+==================================================
+
+Build:
+
+About page:
+
+- Brand introduction
+- Logo
+- Editorial media
+- Brand values
+- Editable story copy
+
+Contact page:
+
+- Accessible contact form
+- Name
+- Email
+- Message
+- Client-side validation
+- Success message
+- No real backend submission
+
+Shipping and returns page:
+
+- Use editable placeholder sections
+- Do not invent delivery days or return guarantees
+- Clearly mark copy requiring client approval in the source data, not as ugly production text
+
+Search page:
+
+- Search input
+- Search results
+- Product result cards
+- Empty state
+- Clear search action
+
+404 page:
+
+- Branded message
+- Return home CTA
+- Shop CTA
+
+==================================================
+PHASE 8: ACCESSIBILITY, PERFORMANCE, AND POLISH
+==================================================
+
+Accessibility:
+
+- Use semantic landmarks
+- Include skip link
+- Maintain logical heading hierarchy
+- Add meaningful alt text
+- Label every form control
+- Add visible keyboard focus
+- Support Escape for dialogs and drawers
+- Trap focus inside open dialogs
+- Announce cart and search result changes
+- Keep touch targets at least 44px
+- Respect prefers-reduced-motion
+- Do not use color as the only status indicator
+- Test at 200% zoom
+- Test keyboard navigation across all routes
+
+Performance:
+
+- Use next/image
+- Use responsive image sizes
+- Preload only the first hero media
+- Lazy-load below-the-fold images
+- Use video poster images
+- Do not load every video on initial page load
+- Avoid third-party embeds
+- Avoid remote CDN dependency
+- Prevent layout shifts with fixed aspect ratios
+- Keep animations limited to opacity and transform where possible
+
+Interaction polish:
+
+- Use subtle 150–300ms transitions
+- Use hover states that do not change layout
+- Add clear pressed and loading states
+- Use skeletons only where a visible loading state exists
+- Animate drawers and carousels smoothly
+- Disable or simplify animation under prefers-reduced-motion
+- Do not make motion necessary to understand or use the interface
+
+==================================================
+PHASE 9: VERIFICATION
+==================================================
+
+Add automated checks for:
+
+- Catalog data parsing
+- Category filtering
+- Search
+- Sorting
+- Price formatting
+- Cart quantity updates
+- Cart subtotal calculation
+- Cart localStorage persistence
+- Invalid form input
+- Empty cart state
+
+Add Playwright smoke tests for:
+
+- Homepage loads without broken images
+- Desktop navigation opens the shop menu
+- Mobile navigation opens and closes
+- Search returns matching products
+- Collection filter changes visible products
+- Product detail page opens
+- Size selection is required
+- Product can be added to cart
+- Cart drawer shows the product
+- Cart quantity updates
+- Cart survives page reload
+- Checkout prototype displays confirmation
+- Keyboard navigation works for the primary flow
+
+Run:
+
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+npx playwright test
+
+Also verify manually at:
+
+- 360px mobile
+- 390px mobile
+- 768px tablet
+- 1024px laptop
+- 1440px desktop
+
+Final acceptance criteria:
+
+- The application looks like a premium editorial Indian fashion storefront.
+- It is visually inspired by Sakhe but clearly belongs to Khadeeja Empire.
+- It uses the supplied logo and local media.
+- It does not generate or hotlink images.
+- All major shopping interactions work in the frontend prototype.
+- The design is responsive.
+- The design is keyboard accessible.
+- No prices or policies are falsely presented as final.
+- The project builds successfully.
+- The code is organized into reusable components.
+- The product catalog can later be replaced by a real backend without redesigning the UI.
+
+-----------------------------------
+Phase 4 Status:
+✅ Completed
+-----------------------------------
