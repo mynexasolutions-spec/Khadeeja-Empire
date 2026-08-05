@@ -7,12 +7,13 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Button } from "@/components/ui/Button";
-import { getLatestProducts } from "@/content/catalog";
 import { formatPrice } from "@/lib/utils";
+import type { Product } from "@/types";
 
-export function ProductRail() {
-  const products = getLatestProducts(6);
+export function ProductRail({ products }: { products: Product[] }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  if (products.length === 0) return null;
 
   const scroll = (dir: "left" | "right") => {
     const container = scrollRef.current;
@@ -25,7 +26,7 @@ export function ProductRail() {
   };
 
   return (
-    <section className="py-16 md:py-24 bg-surface">
+    <section className="paper-grain bg-surface py-16 md:py-24">
       <Container>
         <div className="flex items-end justify-between mb-10 gap-4">
           <SectionHeading
@@ -38,14 +39,14 @@ export function ProductRail() {
             <button
               onClick={() => scroll("left")}
               aria-label="Scroll products left"
-              className="inline-flex items-center justify-center w-10 h-10 border border-border hover:border-ink transition-colors rounded"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-none border border-border-strong transition-colors hover:border-primary hover:bg-accent/10"
             >
               <ChevronLeft size={18} />
             </button>
             <button
               onClick={() => scroll("right")}
               aria-label="Scroll products right"
-              className="inline-flex items-center justify-center w-10 h-10 border border-border hover:border-ink transition-colors rounded"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-none border border-border-strong transition-colors hover:border-primary hover:bg-accent/10"
             >
               <ChevronRight size={18} />
             </button>
@@ -65,7 +66,7 @@ export function ProductRail() {
             >
               <Link
                 href={`/products/${product.slug}`}
-                className="block relative aspect-product overflow-hidden bg-surface group"
+                className="craft-frame group relative block aspect-product overflow-hidden bg-surface"
                 aria-label={`View ${product.name}`}
               >
                 <Image
@@ -76,7 +77,7 @@ export function ProductRail() {
                   className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                 />
                 {product.badge && (
-                  <span className="absolute top-3 left-3 bg-surface-elevated/95 text-ink text-xs uppercase tracking-wider px-3 py-1 font-medium">
+                  <span className="absolute left-3 top-3 bg-accent px-3 py-1 text-xs font-medium uppercase tracking-wider text-primary">
                     {product.badge === "new" && "New"}
                     {product.badge === "featured" && "Featured"}
                   </span>
@@ -88,11 +89,11 @@ export function ProductRail() {
                 </span>
                 <Link
                   href={`/products/${product.slug}`}
-                  className="font-display text-lg text-ink hover:text-primary transition-colors leading-snug"
+                  className="font-display text-lg leading-snug text-primary transition-colors hover:text-accent"
                 >
                   {product.name}
                 </Link>
-                <span className="text-ink font-medium">
+                <span className="font-medium text-primary">
                   {formatPrice(product.price, product.currency)}
                   {product.priceStatus === "demo" && (
                     <span className="text-xs text-muted ml-2">(Demo)</span>

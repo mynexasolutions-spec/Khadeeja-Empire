@@ -1,0 +1,6 @@
+import { saveShippingRateAction, deleteShippingRateAction } from "@/actions/admin/settings";
+import { getDataProvider } from "@/lib/data";
+import { PageHeading } from "../../_components/AdminPage";
+import { ManagedCollection, type ServerFormAction } from "../../_components/ManagedCollection";
+export const dynamic = "force-dynamic";
+export default async function ShippingPage() { const records = await getDataProvider().listShippingRates(); return <div><PageHeading title="Shipping settings" description="Configure delivery charges, free-shipping thresholds and COD availability."/><ManagedCollection records={records as unknown as Array<Record<string, unknown>>} saveAction={saveShippingRateAction as unknown as ServerFormAction} deleteAction={deleteShippingRateAction as unknown as ServerFormAction} emptyTitle="No shipping rates" createLabel="Add shipping rate" fields={[{name:"name",label:"Rate name",required:true},{name:"amount",label:"Charge",type:"number",required:true,min:0,step:0.01},{name:"freeAbove",label:"Free above",type:"number",min:0,step:0.01},{name:"codAvailable",label:"Cash on delivery",type:"checkbox"},{name:"active",label:"Active",type:"checkbox"}]} summary={(r)=>({title:String(r.name),detail:`₹${String(r.amount)} · Free above ₹${String(r.freeAbove??"—")}`,status:Boolean(r.active)})}/></div>; }

@@ -1,0 +1,8 @@
+import type { Metadata } from "next";
+import { Container } from "@/components/ui/Container";
+import { ProductGrid } from "@/components/ui/ProductGrid";
+import { getDataProvider } from "@/lib/data";
+import { toStorefrontProduct } from "@/lib/storefront/adapters";
+export const metadata: Metadata = { title: "Search" };
+export const dynamic = "force-dynamic";
+export default async function SearchPage({searchParams}:{searchParams:Promise<{q?:string}>}){const {q}=await searchParams;const query=q?.trim()||"";const records=query?await getDataProvider().listProducts({search:query,active:true}):[];const results=records.map(toStorefrontProduct);return <div className="py-12 md:py-16"><Container><h1 className="mb-2 text-h1 text-ink">Search</h1><p className="mb-8 text-muted">{query?`${results.length} result${results.length===1?"":"s"} for “${query}”`:"Search for products by name, category, or tag."}</p><form action="/search" method="get" className="mb-8 max-w-md"><div className="flex items-center border-b border-border transition-colors focus-within:border-ink"><input type="search" name="q" defaultValue={query} placeholder="Search products…" aria-label="Search products" className="flex-1 bg-transparent py-3 outline-none"/><button className="px-4 py-2 text-sm font-medium text-ink transition-colors hover:text-primary">Search</button></div></form>{query&&results.length===0?<div className="py-16 text-center"><p className="mb-2 text-h3 text-ink">No products found</p><p className="text-muted">Try a different search term or browse our shop.</p></div>:null}{results.length>0?<ProductGrid products={results} columns={4}/>:null}</Container></div>}

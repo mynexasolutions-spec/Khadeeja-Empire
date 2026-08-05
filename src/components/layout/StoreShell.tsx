@@ -3,26 +3,29 @@
 import { type ReactNode } from "react";
 import { CartProvider } from "@/hooks/useCart";
 import { UIProvider } from "@/hooks/useUI";
+import { AnnouncementBar } from "./AnnouncementBar";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { SearchDrawer } from "./SearchDrawer";
 import { CartDrawer } from "./CartDrawer";
 import { MobileNav } from "./MobileNav";
 import { ToastContainer } from "@/components/ui/Toast";
+import type { Category, Product } from "@/types";
 
-export function StoreShell({ children }: { children: ReactNode }) {
+export function StoreShell({ children, announcements, products, categories, discoveryLinks }: { children: ReactNode; announcements: string[]; products: Product[]; categories: Category[]; discoveryLinks: {label:string;href:string}[] }) {
   return (
     <CartProvider>
       <UIProvider>
         <a href="#main-content" className="skip-link">
           Skip to content
         </a>
-        <Header />
+        <AnnouncementBar messages={announcements} />
+        <Header discoveryLinks={discoveryLinks} />
         <main id="main-content">{children}</main>
         <Footer />
-        <SearchDrawer />
+        <SearchDrawer products={products} />
         <CartDrawer />
-        <MobileNav />
+        <MobileNav categories={categories} />
         <ToastContainer />
       </UIProvider>
     </CartProvider>

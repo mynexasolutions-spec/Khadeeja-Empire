@@ -4,7 +4,7 @@ import { brandValues } from "@/content/catalog";
 
 export function ValuesSection() {
   return (
-    <section className="py-16 md:py-24 bg-ink text-surface-elevated">
+    <section className="values-section border-y border-accent/40 bg-primary py-16 text-surface-elevated md:py-24">
       <Container>
         <SectionHeading
           eyebrow="What We Believe"

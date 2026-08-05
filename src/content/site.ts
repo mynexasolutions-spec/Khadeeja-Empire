@@ -4,7 +4,11 @@ export const siteConfig: SiteConfig = {
   name: "Khadeeja Empire",
   tagline: "Modern Indian Womenswear",
   logo: "/assets/logo.png",
-  announcement: "Complimentary shipping across India on orders above Rs. 2,000",
+  announcements: [
+    "PAN INDIA SHIPPING IN 20 WORKING DAYS",
+    "COMPLIMENTARY SHIPPING ON ORDERS ABOVE ₹2,000",
+    "HANDCRAFTED IN BANARAS — MADE TO ORDER",
+  ],
   email: "hello@khadeejaempire.com",
   phone: "+91 98765 43210",
   instagram: "https://www.instagram.com/khadeejaempire/",

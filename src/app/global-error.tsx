@@ -1,0 +1,5 @@
+"use client";
+
+export default function GlobalError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  return <html lang="en"><body><main style={{minHeight:"100vh",display:"grid",placeItems:"center",padding:"2rem",fontFamily:"system-ui",background:"#faf6f0",color:"#2c221e"}}><section style={{maxWidth:"40rem",textAlign:"center"}}><p style={{color:"#9c5247",fontWeight:700,textTransform:"uppercase",letterSpacing:".16em",fontSize:".75rem"}}>Application data unavailable</p><h1 style={{fontSize:"2rem",margin:".75rem 0"}}>Check the configured data source</h1><p style={{lineHeight:1.7,color:"#6e5e53"}}>If Supabase credentials are configured, apply <code>database/schema.sql</code> and follow <code>database/README.md</code>. The application intentionally does not fall back to local data when a configured Supabase schema is missing.</p><button onClick={reset} style={{marginTop:"1.5rem",border:0,background:"#9c5247",color:"white",padding:".8rem 1.25rem",fontWeight:700,cursor:"pointer"}}>Try again</button></section></main></body></html>;
+}

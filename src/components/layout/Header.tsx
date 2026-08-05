@@ -3,15 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  BookOpen,
-  ChevronDown,
-  Mail,
-  Menu,
-  Search,
-  ShoppingBag,
-  Sparkles,
-} from "lucide-react";
+import { ChevronDown, Menu, Search, ShoppingBag } from "lucide-react";
 import { useUI } from "@/hooks/useUI";
 import { useCart } from "@/hooks/useCart";
 import { siteConfig } from "@/content/site";
@@ -19,14 +11,7 @@ import { cn } from "@/lib/utils";
 import { IconButton } from "@/components/ui/IconButton";
 import { BrandLogo } from "./BrandLogo";
 
-const navigationIcons = {
-  Shop: ShoppingBag,
-  Collections: Sparkles,
-  Story: BookOpen,
-  Contact: Mail,
-};
-
-export function Header() {
+export function Header({ discoveryLinks }: { discoveryLinks: { label: string; href: string }[] }) {
   const pathname = usePathname();
   const { openSearch, openCart, openMobileNav } = useUI();
   const { itemCount } = useCart();
@@ -45,19 +30,15 @@ export function Header() {
   return (
     <header className="sticky-header site-header">
       <div className="nav">
-        <Link
-          href="/"
-          className="logo logo-image"
-          aria-label={`${siteConfig.name} home`}
-        >
-          <BrandLogo variant="navbar" />
-        </Link>
-
-        <nav className="desktop-nav-pill" aria-label="Main navigation">
+        <nav className="desktop-nav-links" aria-label="Main navigation">
+          <Link
+            href="/"
+            className={cn("nav-link-item", pathname === "/" && "active")}
+            aria-current={pathname === "/" ? "page" : undefined}
+          >
+            Home
+          </Link>
           {siteConfig.navigation.map((item) => {
-            const Icon =
-              navigationIcons[item.label as keyof typeof navigationIcons] ??
-              Sparkles;
             const isActive =
               pathname === item.href ||
               (item.href !== "/shop" && pathname.startsWith(item.href));
@@ -71,18 +52,16 @@ export function Header() {
               >
                 <Link
                   href={item.href}
-                  className={cn(
-                    "nav-link-item",
-                    isActive && "active"
-                  )}
+                  className={cn("nav-link-item", isActive && "active")}
+                  aria-current={isActive ? "page" : undefined}
                   onFocus={item.megaMenu ? openMegaMenu : undefined}
                   onBlur={item.megaMenu ? closeMegaMenu : undefined}
                 >
-                  <Icon className="h-4 w-4" aria-hidden="true" />
                   <span>{item.label}</span>
                   {item.megaMenu && (
                     <ChevronDown
-                      size={14}
+                      size={12}
+                      strokeWidth={1.5}
                       className={cn(
                         "transition-transform duration-200",
                         megaMenuOpen && "rotate-180"
@@ -99,7 +78,7 @@ export function Header() {
                         {item.megaMenu.title}
                       </p>
                       <ul className="flex flex-col">
-                        {item.megaMenu.links.map((link, index) => (
+                        {(discoveryLinks.length ? [{ label: "Shop All", href: "/shop" }, ...discoveryLinks] : item.megaMenu.links).map((link, index) => (
                           <li key={link.href}>
                             <Link
                               href={link.href}
@@ -122,13 +101,21 @@ export function Header() {
           })}
         </nav>
 
+        <Link
+          href="/"
+          className="logo logo-image nav-logo"
+          aria-label={`${siteConfig.name} home`}
+        >
+          <BrandLogo variant="navbar" />
+        </Link>
+
         <div className="nav-cta">
           <IconButton
             onClick={openSearch}
             ariaLabel="Search products"
             className="nav-icon-btn"
           >
-            <Search className="h-5 w-5" aria-hidden="true" />
+            <Search className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
           </IconButton>
           <IconButton
             onClick={openCart}
@@ -136,7 +123,11 @@ export function Header() {
             className="nav-icon-btn"
           >
             <span className="relative">
-              <ShoppingBag className="h-5 w-5" aria-hidden="true" />
+              <ShoppingBag
+                className="h-5 w-5"
+                strokeWidth={1.5}
+                aria-hidden="true"
+              />
               {itemCount > 0 && (
                 <span className="nav-cart-badge">
                   {itemCount > 99 ? "99+" : itemCount}
@@ -149,7 +140,7 @@ export function Header() {
             ariaLabel="Open menu"
             className="nav-icon-btn mobile-menu-toggle"
           >
-            <Menu className="h-5 w-5" aria-hidden="true" />
+            <Menu className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
           </IconButton>
         </div>
       </div>

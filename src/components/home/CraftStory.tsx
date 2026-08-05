@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
+import { CraftMark } from "@/components/ui/CraftMark";
 
 const craftImages = [
   "/assets/images/3912472252555175961.jpg",
@@ -39,12 +40,12 @@ export function CraftStory() {
   }, [paused, reducedMotion, next]);
 
   return (
-    <section className="py-16 md:py-24">
+    <section className="home-craft-story bg-primary py-16 text-surface-elevated md:py-24">
       <Container>
         <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
           {/* Fading image slideshow */}
           <div
-            className="relative aspect-[4/5] overflow-hidden bg-surface order-1"
+            className="craft-frame relative order-1 aspect-[4/5] overflow-hidden border-accent bg-surface"
             onMouseEnter={() => setPaused(true)}
             onMouseLeave={() => setPaused(false)}
           >
@@ -67,14 +68,15 @@ export function CraftStory() {
           </div>
 
           {/* Text */}
-          <div className="flex flex-col gap-6 order-2">
-            <p className="text-xs uppercase tracking-[0.15em] text-muted font-medium">
+          <div className="order-2 flex flex-col gap-6">
+            <CraftMark className="h-12 w-12" tone="turmeric" />
+            <p className="text-xs font-medium uppercase tracking-[0.15em] text-accent">
               Our Craft
             </p>
-            <h2 className="text-h1 text-ink leading-[1.15]">
+            <h2 className="text-h1 leading-[1.15] text-surface-elevated">
               Every thread tells a story.
             </h2>
-            <div className="flex flex-col gap-4 text-muted leading-relaxed">
+            <div className="flex flex-col gap-4 leading-relaxed text-surface-elevated/75">
               <p>
                 Born in Banaras and made for the modern woman, Khadeeja Empire
                 bridges the gap between heritage craft and contemporary wardrobes.
@@ -88,7 +90,11 @@ export function CraftStory() {
               </p>
             </div>
             <div>
-              <Button href="/about" variant="outline">
+              <Button
+                href="/about"
+                variant="outline"
+                className="border-accent text-surface-elevated hover:border-accent hover:bg-accent hover:text-primary"
+              >
                 Read Our Story
               </Button>
             </div>

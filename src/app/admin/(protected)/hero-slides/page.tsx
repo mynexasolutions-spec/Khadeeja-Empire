@@ -1,0 +1,6 @@
+import { saveHeroSlideAction, deleteHeroSlideAction } from "@/actions/admin/content";
+import { getDataProvider } from "@/lib/data";
+import { PageHeading } from "../_components/AdminPage";
+import { ManagedCollection, type ServerFormAction } from "../_components/ManagedCollection";
+export const dynamic = "force-dynamic";
+export default async function HeroSlidesPage() { const records = await getDataProvider().listHeroSlides(); return <div><PageHeading title="Hero slides" description="Manage homepage hero media, copy, links and ordering."/><ManagedCollection records={records as unknown as Array<Record<string, unknown>>} saveAction={saveHeroSlideAction as unknown as ServerFormAction} deleteAction={deleteHeroSlideAction as unknown as ServerFormAction} emptyTitle="No hero slides" createLabel="Add hero slide" fields={[{name:"title",label:"Title",required:true},{name:"subtitle",label:"Subtitle"},{name:"image",label:"Image URL",required:true},{name:"video",label:"Video URL"},{name:"imageAlt",label:"Image alt text"},{name:"cta",label:"Button label"},{name:"ctaLink",label:"Button link"},{name:"sortOrder",label:"Sort order",type:"number",min:0},{name:"active",label:"Active",type:"checkbox"}]} summary={(r)=>({title:String(r.title),detail:String(r.subtitle||r.image),status:Boolean(r.active)})}/></div>; }

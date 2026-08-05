@@ -87,6 +87,7 @@ export interface HeroSlide {
   title: string;
   subtitle: string;
   image: string;
+  imageAlt: string;
   video?: string;
   cta: string;
   ctaLink: string;
@@ -111,7 +112,7 @@ export interface SiteConfig {
   name: string;
   tagline: string;
   logo: string;
-  announcement: string;
+  announcements: string[];
   email: string;
   phone: string;
   instagram: string;

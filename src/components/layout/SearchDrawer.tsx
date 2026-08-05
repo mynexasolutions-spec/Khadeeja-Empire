@@ -6,18 +6,19 @@ import Image from "next/image";
 import { Search } from "lucide-react";
 import { useUI } from "@/hooks/useUI";
 import { Drawer } from "@/components/ui/Drawer";
-import { searchProducts } from "@/content/catalog";
 import { formatPrice } from "@/lib/utils";
+import type { Product } from "@/types";
 
-export function SearchDrawer() {
+export function SearchDrawer({ products }: { products: Product[] }) {
   const { openDrawer, closeDrawer } = useUI();
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const results = useMemo(() => {
     if (query.trim().length < 2) return [];
-    return searchProducts(query).slice(0, 6);
-  }, [query]);
+    const normalized = query.trim().toLowerCase();
+    return products.filter((product) => [product.name, product.category, product.collection, ...product.tags].some((value) => value.toLowerCase().includes(normalized))).slice(0, 6);
+  }, [products, query]);
 
   return (
     <Drawer

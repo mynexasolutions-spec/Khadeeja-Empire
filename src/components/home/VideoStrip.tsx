@@ -1,16 +1,15 @@
 "use client";
 
-import { useRef } from "react";
 import Image from "next/image";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { getInstagramFeed } from "@/content/instagram";
+import type { InstagramPost } from "@/types";
 
-export function VideoStrip() {
-  const posts = getInstagramFeed(8);
+export function VideoStrip({ posts }: { posts: InstagramPost[] }) {
+  if (posts.length === 0) return null;
 
   return (
-    <section className="py-16 md:py-24 bg-surface">
+    <section className="paper-grain bg-surface py-16 md:py-24">
       <Container>
         <SectionHeading
           eyebrow="Follow Along"
@@ -22,7 +21,7 @@ export function VideoStrip() {
           {posts.map((post) => (
             <div
               key={post.id}
-              className="relative aspect-square overflow-hidden bg-bg group rounded-sm"
+              className="craft-frame group relative aspect-square overflow-hidden rounded-none bg-bg"
             >
               {post.video ? (
                 <video

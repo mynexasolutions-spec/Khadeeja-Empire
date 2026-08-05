@@ -1,0 +1,6 @@
+import { saveAnnouncementAction, deleteAnnouncementAction } from "@/actions/admin/content";
+import { getDataProvider } from "@/lib/data";
+import { PageHeading } from "../_components/AdminPage";
+import { ManagedCollection, type ServerFormAction } from "../_components/ManagedCollection";
+export const dynamic = "force-dynamic";
+export default async function AnnouncementsPage() { const records = await getDataProvider().listAnnouncements(); return <div><PageHeading title="Announcements" description="Control the messages shown in the storefront announcement bar."/><ManagedCollection records={records as unknown as Array<Record<string, unknown>>} saveAction={saveAnnouncementAction as unknown as ServerFormAction} deleteAction={deleteAnnouncementAction as unknown as ServerFormAction} emptyTitle="No announcements" createLabel="Add announcement" fields={[{name:"text",label:"Message",type:"textarea",required:true},{name:"sortOrder",label:"Sort order",type:"number",min:0},{name:"startsAt",label:"Starts at",type:"datetime-local"},{name:"endsAt",label:"Ends at",type:"datetime-local"},{name:"active",label:"Active",type:"checkbox"}]} summary={(r)=>({title:String(r.text),detail:`Order ${String(r.sortOrder??0)}`,status:Boolean(r.active)})}/></div>; }

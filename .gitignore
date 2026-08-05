@@ -12,6 +12,9 @@ out/
 build/
 dist/
 
+# Local admin runtime data
+/.data/
+
 # Misc
 .DS_Store
 *.pem

@@ -1,0 +1,6 @@
+import { saveTestimonialAction, deleteTestimonialAction } from "@/actions/admin/content";
+import { getDataProvider } from "@/lib/data";
+import { PageHeading } from "../_components/AdminPage";
+import { ManagedCollection, type ServerFormAction } from "../_components/ManagedCollection";
+export const dynamic = "force-dynamic";
+export default async function HomeReviewsPage() { const records = await getDataProvider().listTestimonials(); return <div><PageHeading title="Homepage reviews" description="Manage customer testimonials shown on the homepage."/><ManagedCollection records={records as unknown as Array<Record<string, unknown>>} saveAction={saveTestimonialAction as unknown as ServerFormAction} deleteAction={deleteTestimonialAction as unknown as ServerFormAction} emptyTitle="No testimonials" createLabel="Add testimonial" fields={[{name:"authorName",label:"Customer name",required:true},{name:"role",label:"Location or role"},{name:"quote",label:"Review",type:"textarea",required:true},{name:"image",label:"Image URL"},{name:"sortOrder",label:"Sort order",type:"number",min:0},{name:"active",label:"Active",type:"checkbox"}]} summary={(r)=>({title:String(r.authorName),detail:String(r.quote),status:Boolean(r.active)})}/></div>; }

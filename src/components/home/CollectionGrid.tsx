@@ -2,9 +2,20 @@ import Link from "next/link";
 import Image from "next/image";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { categories } from "@/content/categories";
+import type { Category } from "@/types";
 
-export function CollectionGrid() {
+const collectionAccents: Record<string, "indigo" | "turmeric" | "madder" | "leaf"> = {
+  "short-kurtis": "indigo",
+  "coord-sets": "madder",
+  "everyday-tops": "leaf",
+  dresses: "turmeric",
+  "resort-and-whites": "indigo",
+  "new-arrivals": "madder",
+};
+
+export function CollectionGrid({ categories }: { categories: Category[] }) {
+  if (categories.length === 0) return null;
+
   return (
     <section className="py-16 md:py-24">
       <Container>
@@ -22,7 +33,10 @@ export function CollectionGrid() {
               className="group block min-w-0"
               aria-label={`Explore ${cat.name}`}
             >
-              <div className="relative aspect-[4/5] overflow-hidden bg-surface group">
+              <div
+                className="collection-card craft-frame group relative aspect-[4/5] overflow-hidden bg-surface"
+                data-accent={collectionAccents[cat.slug] ?? "turmeric"}
+              >
                 <Image
                   src={cat.image}
                   alt={cat.name}
@@ -32,10 +46,10 @@ export function CollectionGrid() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-ink/50 via-transparent to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 text-surface-elevated">
-                  <h3 className="font-display text-xl md:text-2xl leading-tight mb-1">
+                  <h3 className="mb-1 font-display text-xl leading-tight md:text-2xl">
                     {cat.name}
                   </h3>
-                  <span className="text-xs uppercase tracking-wider opacity-80 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1">
+                  <span className="inline-flex items-center gap-1 text-xs uppercase tracking-wider text-accent opacity-80 transition-opacity group-hover:opacity-100">
                     Explore
                     <span className="transition-transform duration-200 group-hover:translate-x-1">→</span>
                   </span>

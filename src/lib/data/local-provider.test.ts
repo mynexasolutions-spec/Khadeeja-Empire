@@ -1,0 +1,110 @@
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { DataProviderError } from "../admin/errors";
+
+vi.mock("server-only", () => ({}));
+
+import { createLocalProvider } from "./local-provider";
+
+const temporaryDirectories: string[] = [];
+
+async function createTestFilePath() {
+  const directory = await mkdtemp(join(tmpdir(), "khadeeja-admin-"));
+  temporaryDirectories.push(directory);
+  return join(directory, "admin.json");
+}
+
+afterEach(async () => {
+  await Promise.all(
+    temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true, force: true }))
+  );
+});
+
+describe("local data provider", () => {
+  it("seeds current Khadeeja content and persists catalog mutations", async () => {
+    const filePath = await createTestFilePath();
+    const firstProvider = createLocalProvider({ filePath });
+    const seededProducts = await firstProvider.listProducts();
+
+    expect(seededProducts.length).toBeGreaterThan(0);
+    expect(seededProducts.every((product) => product.id.startsWith("p-"))).toBe(true);
+
+    const created = await firstProvider.createProduct({
+      name: "Test Kurti",
+      slug: "test-kurti",
+      price: 1500,
+      currency: "INR",
+      images: ["/assets/images/test-kurti.jpg"],
+    });
+    await firstProvider.updateProduct(created.id, { name: "Updated Kurti" });
+
+    const secondProvider = createLocalProvider({ filePath });
+    await expect(secondProvider.getProduct("test-kurti")).resolves.toMatchObject({
+      id: created.id,
+      name: "Updated Kurti",
+      images: [expect.objectContaining({ url: "/assets/images/test-kurti.jpg" })],
+    });
+
+    const raw = await readFile(filePath, "utf8");
+    expect(JSON.parse(raw).products).toEqual(expect.any(Array));
+  });
+
+  it("surfaces invalid local data instead of silently reseeding", async () => {
+    const filePath = await createTestFilePath();
+    await writeFile(filePath, "not-json", "utf8");
+
+    await expect(createLocalProvider({ filePath }).listProducts()).rejects.toBeInstanceOf(
+      DataProviderError
+    );
+  });
+
+  it("serializes mutations across provider instances sharing one file", async () => {
+    const filePath = await createTestFilePath();
+    const firstProvider = createLocalProvider({ filePath });
+    const secondProvider = createLocalProvider({ filePath });
+
+    await firstProvider.listProducts();
+    await Promise.all([
+      firstProvider.updateProduct("p-kurti-01", { description: "First concurrent update" }),
+      secondProvider.updateProduct("p-kurti-01", { price: 1111 }),
+    ]);
+
+    await expect(firstProvider.getProduct("p-kurti-01")).resolves.toMatchObject({
+      description: "First concurrent update",
+      price: 1111,
+    });
+  });
+
+  it("rejects corrupt entity records instead of casting them through", async () => {
+    const filePath = await createTestFilePath();
+    const provider = createLocalProvider({ filePath });
+    await provider.listProducts();
+
+    const raw = JSON.parse(await readFile(filePath, "utf8")) as { products: unknown[] };
+    raw.products = [{ id: "p-corrupt", slug: 42 }];
+    await writeFile(filePath, `${JSON.stringify(raw)}\n`, "utf8");
+
+    await expect(provider.listProducts()).rejects.toMatchObject({ code: "storage" });
+  });
+
+  it("supports discovery menu CRUD and ordering", async () => {
+    const filePath = await createTestFilePath();
+    const provider = createLocalProvider({ filePath });
+    const first = await provider.createDiscoveryMenuEntry({ label: "Shop", href: "/shop" });
+    const second = await provider.createDiscoveryMenuEntry({ label: "Story", href: "/about" });
+
+    await provider.reorderDiscoveryMenuEntries([second.id, first.id]);
+    await expect(provider.listDiscoveryMenuEntries()).resolves.toMatchObject([
+      { id: second.id, sortOrder: 0 },
+      { id: first.id, sortOrder: 1 },
+    ]);
+
+    await provider.updateDiscoveryMenuEntry(first.id, { label: "Collections" });
+    await provider.deleteDiscoveryMenuEntry(second.id);
+    await expect(provider.listDiscoveryMenuEntries()).resolves.toMatchObject([
+      { id: first.id, label: "Collections" },
+    ]);
+  });
+});

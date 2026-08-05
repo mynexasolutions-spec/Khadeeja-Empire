@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { z } from "zod";
 import { ArrowRight } from "lucide-react";
+import { subscribeToNewsletter } from "@/actions/storefront/submissions";
 
 const schema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -12,6 +13,7 @@ export function NewsletterForm() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [pending, startTransition] = useTransition();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,13 +23,12 @@ export function NewsletterForm() {
       setMessage(result.error.errors[0].message);
       return;
     }
-    setStatus("success");
-    setMessage("Thank you for subscribing!");
-    setEmail("");
-    setTimeout(() => {
-      setStatus("idle");
-      setMessage("");
-    }, 4000);
+    startTransition(async () => {
+      const response = await subscribeToNewsletter({ email: result.data.email });
+      setStatus(response.ok ? "success" : "error");
+      setMessage(response.message);
+      if (response.ok) setEmail("");
+    });
   };
 
   return (
@@ -42,15 +43,18 @@ export function NewsletterForm() {
           aria-label="Email address for newsletter"
           aria-invalid={status === "error"}
           aria-describedby="newsletter-msg"
+          disabled={pending}
           required
           className="footer-form-input"
         />
         <button
           type="submit"
           aria-label="Subscribe to newsletter"
+          aria-busy={pending}
+          disabled={pending}
           className="footer-form-button"
         >
-          <ArrowRight size={18} />
+          <ArrowRight className={pending ? "animate-pulse" : undefined} size={18} />
         </button>
       </div>
       {message && (

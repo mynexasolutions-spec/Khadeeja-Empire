@@ -5,9 +5,9 @@ import Image from "next/image";
 import { useUI } from "@/hooks/useUI";
 import { Drawer } from "@/components/ui/Drawer";
 import { siteConfig } from "@/content/site";
-import { categories } from "@/content/categories";
+import type { Category } from "@/types";
 
-export function MobileNav() {
+export function MobileNav({ categories }: { categories: Category[] }) {
   const { openDrawer, closeDrawer } = useUI();
   const open = openDrawer === "mobile-nav";
 
