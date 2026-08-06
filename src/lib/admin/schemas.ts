@@ -97,6 +97,25 @@ export const productInformationMutationSchema = z.object({
   care: trimmedString.max(2000).nullable().optional(),
   fit: trimmedString.max(500).nullable().optional(),
   shipping: trimmedString.max(2000).nullable().optional(),
+  measurements: z
+    .object({
+      enabled: z.boolean().nullable().optional(),
+      unit: z.enum(["cm", "inches"]).nullable().optional(),
+      sizes: z
+        .array(
+          z.object({
+            size: trimmedString.min(1).max(32),
+            chest: trimmedString.max(100).nullable().optional(),
+            waist: trimmedString.max(100).nullable().optional(),
+            hip: trimmedString.max(100).nullable().optional(),
+          })
+        )
+        .max(50)
+        .nullable()
+        .optional(),
+    })
+    .nullable()
+    .optional(),
   seo: z
     .object({
       title: trimmedString.max(240).nullable().optional(),

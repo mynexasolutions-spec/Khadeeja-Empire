@@ -101,7 +101,7 @@ export interface ValueItem {
 
 export interface NavItem {
   label: string;
-  href: string;
+  href?: string;
   megaMenu?: {
     title: string;
     links: { label: string; href: string }[];

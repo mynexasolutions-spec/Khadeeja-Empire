@@ -11,6 +11,8 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, className, priority }: ProductCardProps) {
+  const hoverImage = product.images[1];
+
   return (
     <article className={cn("group flex flex-col", className)}>
       <Link
@@ -23,9 +25,21 @@ export function ProductCard({ product, className, priority }: ProductCardProps) 
           alt={product.name}
           fill
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+          className={cn(
+            "object-cover transition duration-500 ease-out group-hover:scale-105",
+            hoverImage && "group-hover:opacity-0"
+          )}
           priority={priority}
         />
+        {hoverImage && (
+          <Image
+            src={hoverImage}
+            alt=""
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover opacity-0 transition duration-500 ease-out group-hover:scale-105 group-hover:opacity-100"
+          />
+        )}
         {product.badge && (
           <span className="absolute top-3 left-3 bg-surface-elevated/95 text-ink text-xs uppercase tracking-wider px-3 py-1 font-medium">
             {product.badge === "new" && "New"}

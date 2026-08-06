@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { ChevronDown } from "lucide-react";
 import { useUI } from "@/hooks/useUI";
 import { Drawer } from "@/components/ui/Drawer";
 import { siteConfig } from "@/content/site";
@@ -35,48 +36,86 @@ export function MobileNav({ categories }: { categories: Category[] }) {
 
         <nav className="flex flex-col gap-1" aria-label="Mobile navigation">
           <Link
-            href="/shop"
+            href="/"
             onClick={closeDrawer}
             className="text-lg font-display text-ink py-3 border-b border-border hover:text-primary transition-colors"
           >
-            Shop All
+            Home
           </Link>
 
-          <p className="text-xs uppercase tracking-wider text-muted font-medium pt-4 pb-2">
-            Collections
-          </p>
-          {categories.map((cat) => (
-            <Link
-              key={cat.slug}
-              href={`/collections/${cat.slug}`}
-              onClick={closeDrawer}
-              className="text-base text-ink py-2.5 hover:text-primary transition-colors"
-            >
-              {cat.name}
-            </Link>
-          ))}
+          <details className="group border-b border-border">
+            <summary className="flex cursor-pointer list-none items-center justify-between py-3 text-lg font-display text-ink transition-colors hover:text-primary [&::-webkit-details-marker]:hidden">
+              Shop
+              <ChevronDown
+                size={16}
+                strokeWidth={1.5}
+                className="transition-transform duration-200 group-open:rotate-180"
+                aria-hidden="true"
+              />
+            </summary>
+            <div className="flex flex-col pb-3 pl-3">
+              <Link
+                href="/shop"
+                onClick={closeDrawer}
+                className="py-2.5 text-base font-medium text-ink transition-colors hover:text-primary"
+              >
+                Shop All
+              </Link>
+              {categories.map((cat) => (
+                <Link
+                  key={cat.slug}
+                  href={`/collections/${cat.slug}`}
+                  onClick={closeDrawer}
+                  className="py-2.5 text-base text-ink transition-colors hover:text-primary"
+                >
+                  {cat.name}
+                </Link>
+              ))}
+            </div>
+          </details>
 
-          <div className="border-t border-border mt-4 pt-4 flex flex-col gap-1">
+          <details className="group border-b border-border">
+            <summary className="flex cursor-pointer list-none items-center justify-between py-3 text-lg font-display text-ink transition-colors hover:text-primary [&::-webkit-details-marker]:hidden">
+              Support
+              <ChevronDown
+                size={16}
+                strokeWidth={1.5}
+                className="transition-transform duration-200 group-open:rotate-180"
+                aria-hidden="true"
+              />
+            </summary>
+            <div className="flex flex-col pb-3 pl-3">
+              <Link
+                href="/contact"
+                onClick={closeDrawer}
+                className="py-2.5 text-base text-ink transition-colors hover:text-primary"
+              >
+                Contact Us
+              </Link>
+              <Link
+                href="/shipping-returns"
+                onClick={closeDrawer}
+                className="py-2.5 text-base text-ink transition-colors hover:text-primary"
+              >
+                Refund &amp; Shipping Policies
+              </Link>
+            </div>
+          </details>
+
+          <div className="flex flex-col gap-1 pt-1">
             <Link
               href="/about"
               onClick={closeDrawer}
-              className="text-base text-ink py-2.5 hover:text-primary transition-colors"
+              className="py-3 text-lg font-display text-ink border-b border-border hover:text-primary transition-colors"
             >
-              Our Story
+              Story
             </Link>
             <Link
               href="/contact"
               onClick={closeDrawer}
-              className="text-base text-ink py-2.5 hover:text-primary transition-colors"
+              className="py-3 text-lg font-display text-ink hover:text-primary transition-colors"
             >
               Contact
-            </Link>
-            <Link
-              href="/shipping-returns"
-              onClick={closeDrawer}
-              className="text-base text-ink py-2.5 hover:text-primary transition-colors"
-            >
-              Shipping & Returns
             </Link>
           </div>
         </nav>

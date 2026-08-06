@@ -2,9 +2,28 @@ import { categories, collections } from "../../content/categories";
 import { heroSlides, products } from "../../content/catalog";
 import { instagramPosts } from "../../content/instagram";
 import { siteConfig } from "../../content/site";
-import type { AdminDataState, ProductImageRecord, ProductRecord } from "../admin/types";
+import type {
+  AdminDataState,
+  ProductImageRecord,
+  ProductInformationRecord,
+  ProductRecord,
+  SizeChartMeasurements,
+} from "../admin/types";
 
 const seedTimestamp = "2026-08-05T00:00:00.000Z";
+
+const demoMeasurements: SizeChartMeasurements = {
+  enabled: true,
+  unit: "cm",
+  sizes: [
+    { size: "XXS", chest: "30-32", waist: "24-26", hip: "32-34" },
+    { size: "XS", chest: "32-34", waist: "26-28", hip: "34-36" },
+    { size: "S", chest: "34-36", waist: "28-30", hip: "36-38" },
+    { size: "M", chest: "36-38", waist: "30-32", hip: "38-40" },
+    { size: "L", chest: "38-40", waist: "32-34", hip: "40-42" },
+    { size: "XL", chest: "40-42", waist: "34-36", hip: "42-44" },
+  ],
+};
 
 export function createSeedData(): AdminDataState {
   const images: ProductImageRecord[] = [];
@@ -49,6 +68,14 @@ export function createSeedData(): AdminDataState {
       updatedAt: seedTimestamp,
     };
   });
+  const productInformation: ProductInformationRecord[] = seededProducts.slice(0, 6).map((product) => ({
+    id: `${product.id}-information`,
+    productId: product.id,
+    measurements: {
+      ...demoMeasurements,
+      sizes: demoMeasurements.sizes?.map((size) => ({ ...size })),
+    },
+  }));
 
   return {
     products: seededProducts,
@@ -74,7 +101,7 @@ export function createSeedData(): AdminDataState {
     colors: [],
     variants: [],
     images,
-    productInformation: [],
+    productInformation,
     profiles: [],
     customers: [],
     addresses: [],

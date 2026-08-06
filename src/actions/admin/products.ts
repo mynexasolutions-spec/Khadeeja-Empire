@@ -122,7 +122,7 @@ async function saveProductInformationMutation(productId: string, input: unknown)
   return adminMutation(async () => {
     const id = parseId(productId);
     const value = productInformationMutationSchema.parse(inputObject(input, {
-      json: ["seo"], nullable: ["details", "fabric", "care", "fit", "shipping", "seo"],
+      json: ["seo", "measurements"], nullable: ["details", "fabric", "care", "fit", "shipping", "seo", "measurements"],
     }));
     return getDataProvider().upsertProductInformation(id, value);
   }, [...paths, `/admin/products/${productId}/edit`]);

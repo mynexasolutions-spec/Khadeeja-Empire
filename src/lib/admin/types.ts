@@ -84,6 +84,19 @@ export interface CollectionRecord {
   sortOrder?: number | null;
 }
 
+export interface SizeChartSize {
+  size: string;
+  chest?: string | null;
+  waist?: string | null;
+  hip?: string | null;
+}
+
+export interface SizeChartMeasurements {
+  enabled?: boolean | null;
+  unit?: "cm" | "inches" | null;
+  sizes?: SizeChartSize[] | null;
+}
+
 export interface ProductInformationRecord {
   id: ProviderId;
   productId: ProviderId;
@@ -92,6 +105,7 @@ export interface ProductInformationRecord {
   care?: string | null;
   fit?: string | null;
   shipping?: string | null;
+  measurements?: SizeChartMeasurements | null;
   seo?: SeoRecord | null;
 }
 

@@ -1,12 +1,90 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { Container } from "@/components/ui/Container";
 import { ProductGrid } from "@/components/ui/ProductGrid";
 import { getDataProvider } from "@/lib/data";
 import { toStorefrontCategory, toStorefrontCollection, toStorefrontProduct } from "@/lib/storefront/adapters";
-interface PageProps { params: Promise<{slug:string}> }
+
+interface PageProps {
+  params: Promise<{ slug: string }>;
+}
+
 export const dynamic = "force-dynamic";
-export async function generateMetadata({params}:PageProps):Promise<Metadata>{const {slug}=await params;const provider=getDataProvider();const display=await provider.getCollection(slug)??await provider.getCategory(slug);return display?{title:display.name,description:display.description||undefined}:{title:"Collection Not Found"}}
-export default async function CollectionPage({params}:PageProps){const {slug}=await params;const provider=getDataProvider();const [collectionRecord,categoryRecord,productRecords,allCollections]=await Promise.all([provider.getCollection(slug),provider.getCategory(slug),provider.listProducts({active:true}),provider.listCollections({active:true})]);if(!collectionRecord&&!categoryRecord)notFound();const display=collectionRecord?toStorefrontCollection(collectionRecord):toStorefrontCategory(categoryRecord!);const products=productRecords.filter(p=>p.collectionSlug===slug||p.collection?.slug===slug||p.categorySlug===slug||p.category?.slug===slug).map(toStorefrontProduct);const image=display.image||"/assets/slides/girl-1.png";return <div><div className="relative h-[40vh] min-h-[300px] w-full overflow-hidden bg-surface"><Image src={image} alt={display.name} fill sizes="100vw" className="object-cover" priority/><div className="absolute inset-0 bg-ink/30"/><div className="absolute inset-0 flex items-center justify-center"><div className="px-4 text-center"><h1 className="mb-2 text-display text-surface-elevated">{display.name}</h1><p className="mx-auto max-w-xl text-lead text-surface-elevated/85">{display.description}</p></div></div></div><Container className="py-12 md:py-16"><p className="mb-8 text-muted">{products.length} products</p>{products.length?<ProductGrid products={products} columns={4} priorityCount={4}/>:<div className="py-12 text-center text-muted">No active products in this collection yet.</div>}<div className="mt-16 border-t border-border pt-8"><h2 className="mb-6 text-h3">Explore other collections</h2><div className="flex flex-wrap gap-3">{allCollections.filter(c=>c.slug!==slug).map(c=><Link key={c.id} href={`/collections/${c.slug}`} className="border border-border px-4 py-2 text-sm transition-colors hover:border-ink">{c.name}</Link>)}</div></div></Container></div>}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const provider = getDataProvider();
+  const display = (await provider.getCollection(slug)) ?? (await provider.getCategory(slug));
+
+  return display
+    ? { title: display.name, description: display.description || undefined }
+    : { title: "Collection Not Found" };
+}
+
+export default async function CollectionPage({ params }: PageProps) {
+  const { slug } = await params;
+  const provider = getDataProvider();
+  const [collectionRecord, categoryRecord, productRecords, allCollections] = await Promise.all([
+    provider.getCollection(slug),
+    provider.getCategory(slug),
+    provider.listProducts({ active: true }),
+    provider.listCollections({ active: true }),
+  ]);
+
+  if (!collectionRecord && !categoryRecord) notFound();
+
+  const display = collectionRecord
+    ? toStorefrontCollection(collectionRecord)
+    : toStorefrontCategory(categoryRecord!);
+  const products = productRecords
+    .filter(
+      (product) =>
+        product.collectionSlug === slug ||
+        product.collection?.slug === slug ||
+        product.categorySlug === slug ||
+        product.category?.slug === slug
+    )
+    .map(toStorefrontProduct);
+  const otherCollections = allCollections.filter((collection) => collection.slug !== slug);
+
+  return (
+    <div className="py-12 md:py-16">
+      <Container>
+        <header className="mb-10 flex flex-col gap-2">
+          <h1 className="text-h1 text-ink">{display.name}</h1>
+          <p className="text-muted">
+            {products.length} {products.length === 1 ? "product" : "products"}
+          </p>
+        </header>
+
+        {otherCollections.length > 0 && (
+          <nav className="mb-10" aria-labelledby="other-collections-heading">
+            <h2 id="other-collections-heading" className="mb-4 text-h3 text-ink">
+              Explore other collections
+            </h2>
+            <div className="flex flex-wrap gap-3">
+              {otherCollections.map((collection) => (
+                <Link
+                  key={collection.id}
+                  href={`/collections/${collection.slug}`}
+                  className="border border-border px-4 py-2 text-sm text-ink transition-colors hover:border-ink"
+                >
+                  {collection.name}
+                </Link>
+              ))}
+            </div>
+          </nav>
+        )}
+
+        {products.length > 0 ? (
+          <ProductGrid products={products} columns={4} priorityCount={4} />
+        ) : (
+          <div className="py-12 text-center text-muted">
+            No active products in this collection yet.
+          </div>
+        )}
+      </Container>
+    </div>
+  );
+}

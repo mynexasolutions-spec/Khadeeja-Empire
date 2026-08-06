@@ -15,16 +15,16 @@ export function Header({ discoveryLinks }: { discoveryLinks: { label: string; hr
   const pathname = usePathname();
   const { openSearch, openCart, openMobileNav } = useUI();
   const { itemCount } = useCart();
-  const [megaMenuOpen, setMegaMenuOpen] = useState(false);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const openMegaMenu = () => {
+  const openDropdown = (label: string) => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
-    setMegaMenuOpen(true);
+    setOpenMenu(label);
   };
 
-  const closeMegaMenu = () => {
-    closeTimer.current = setTimeout(() => setMegaMenuOpen(false), 150);
+  const closeDropdown = () => {
+    closeTimer.current = setTimeout(() => setOpenMenu(null), 150);
   };
 
   return (
@@ -39,52 +39,102 @@ export function Header({ discoveryLinks }: { discoveryLinks: { label: string; hr
             Home
           </Link>
           {siteConfig.navigation.map((item) => {
+            const menuOpen = openMenu === item.label;
+            const menuId = `desktop-nav-${item.label.toLowerCase().replaceAll(" ", "-")}`;
             const isActive =
-              pathname === item.href ||
-              (item.href !== "/shop" && pathname.startsWith(item.href));
+              item.href &&
+              (pathname === item.href ||
+                (item.href !== "/shop" && pathname.startsWith(item.href)));
+            const menuLinks =
+              item.label === "Shop" && discoveryLinks.length
+                ? [{ label: "Shop All", href: "/shop" }, ...discoveryLinks]
+                : item.megaMenu?.links;
 
             return (
               <div
                 key={item.label}
                 className="relative"
-                onMouseEnter={item.megaMenu ? openMegaMenu : undefined}
-                onMouseLeave={item.megaMenu ? closeMegaMenu : undefined}
+                onMouseEnter={item.megaMenu ? () => openDropdown(item.label) : undefined}
+                onMouseLeave={item.megaMenu ? closeDropdown : undefined}
+                onFocusCapture={item.megaMenu ? () => openDropdown(item.label) : undefined}
+                onBlurCapture={
+                  item.megaMenu
+                    ? (event) => {
+                        if (!event.currentTarget.contains(event.relatedTarget)) {
+                          closeDropdown();
+                        }
+                      }
+                    : undefined
+                }
+                onKeyDown={
+                  item.megaMenu
+                    ? (event) => {
+                        if (event.key === "Escape") {
+                          setOpenMenu(null);
+                          (event.currentTarget.querySelector("a, button") as HTMLElement)?.focus();
+                        }
+                      }
+                    : undefined
+                }
               >
-                <Link
-                  href={item.href}
-                  className={cn("nav-link-item", isActive && "active")}
-                  aria-current={isActive ? "page" : undefined}
-                  onFocus={item.megaMenu ? openMegaMenu : undefined}
-                  onBlur={item.megaMenu ? closeMegaMenu : undefined}
-                >
-                  <span>{item.label}</span>
-                  {item.megaMenu && (
+                {item.href ? (
+                  <Link
+                    href={item.href}
+                    className={cn("nav-link-item", isActive && "active")}
+                    aria-current={isActive ? "page" : undefined}
+                    aria-haspopup={item.megaMenu ? "true" : undefined}
+                    aria-expanded={item.megaMenu ? menuOpen : undefined}
+                    aria-controls={item.megaMenu ? menuId : undefined}
+                  >
+                    <span>{item.label}</span>
+                    {item.megaMenu && (
+                      <ChevronDown
+                        size={12}
+                        strokeWidth={1.5}
+                        className={cn(
+                          "transition-transform duration-200",
+                          menuOpen && "rotate-180"
+                        )}
+                        aria-hidden="true"
+                      />
+                    )}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    className="nav-link-item"
+                    aria-haspopup="true"
+                    aria-expanded={menuOpen}
+                    aria-controls={menuId}
+                    onClick={() => openDropdown(item.label)}
+                  >
+                    <span>{item.label}</span>
                     <ChevronDown
                       size={12}
                       strokeWidth={1.5}
                       className={cn(
                         "transition-transform duration-200",
-                        megaMenuOpen && "rotate-180"
+                        menuOpen && "rotate-180"
                       )}
                       aria-hidden="true"
                     />
-                  )}
-                </Link>
+                  </button>
+                )}
 
-                {item.megaMenu && megaMenuOpen && (
-                  <div className="absolute left-0 top-full z-10 pt-2">
+                {item.megaMenu && menuOpen && (
+                  <div id={menuId} className="absolute left-0 top-full z-10 pt-2">
                     <div className="bg-surface border border-border shadow-md min-w-[240px] py-4">
                       <p className="px-6 pb-3 text-xs uppercase tracking-wider text-muted font-medium">
                         {item.megaMenu.title}
                       </p>
                       <ul className="flex flex-col">
-                        {(discoveryLinks.length ? [{ label: "Shop All", href: "/shop" }, ...discoveryLinks] : item.megaMenu.links).map((link, index) => (
+                        {menuLinks?.map((link, index) => (
                           <li key={link.href}>
                             <Link
                               href={link.href}
                               className={cn(
                                 "block px-6 py-2.5 text-sm text-ink hover:bg-bg hover:text-primary transition-colors",
-                                index === 0 &&
+                                item.label === "Shop" && index === 0 &&
                                   "font-medium border-b border-border mb-1"
                               )}
                             >

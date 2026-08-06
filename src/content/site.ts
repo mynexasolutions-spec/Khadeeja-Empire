@@ -36,8 +36,17 @@ export const siteConfig: SiteConfig = {
       },
     },
     {
-      label: "Collections",
-      href: "/shop",
+      label: "Support",
+      megaMenu: {
+        title: "Customer Care",
+        links: [
+          { label: "Contact Us", href: "/contact" },
+          {
+            label: "Refund & Shipping Policies",
+            href: "/shipping-returns",
+          },
+        ],
+      },
     },
     {
       label: "Story",
