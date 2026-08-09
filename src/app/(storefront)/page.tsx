@@ -1,4 +1,5 @@
 import { Fraunces } from "next/font/google";
+import { BehindTheAtelier } from "@/components/home/BehindTheAtelier";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { BrandIntro } from "@/components/home/BrandIntro";
 import { CollectionGrid } from "@/components/home/CollectionGrid";
@@ -62,10 +63,10 @@ export default async function HomePage() {
 
   return (
     <HomeTheme className={homeDisplay.variable}>
-      <HeroCarousel slides={heroSlides.map(toStorefrontHeroSlide)} />
-      <BrandIntro />
+      <BehindTheAtelier />
       <CollectionGrid categories={categories.filter((item) => Boolean(item.image)).map(toStorefrontCategory)} />
       <ProductRail products={products.filter((item) => (item.images?.length ?? 0) > 0).slice(0, 6).map(toStorefrontProduct)} />
+      <BrandIntro />
       <CraftStory />
       <ValuesSection />
       <PublicReviews reviews={publicReviews} />

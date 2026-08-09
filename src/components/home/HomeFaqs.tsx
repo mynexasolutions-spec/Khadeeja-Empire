@@ -6,7 +6,7 @@ export function HomeFaqs({ faqs }: { faqs: FaqRecord[] }) {
   if (faqs.length === 0) return null;
 
   return (
-    <section className="bg-surface py-16 md:py-24" aria-labelledby="home-faq-title">
+    <section className="bg-surface py-10 md:py-14" aria-labelledby="home-faq-title">
       <Container className="max-w-4xl">
         <SectionHeading
           eyebrow="Good to Know"

@@ -14,7 +14,7 @@ export function PublicReviews({ reviews }: { reviews: PublicReviewItem[] }) {
   if (reviews.length === 0) return null;
 
   return (
-    <section className="paper-grain bg-bg py-16 md:py-24" aria-labelledby="home-reviews-title">
+    <section className="paper-grain bg-bg py-10 md:py-14" aria-labelledby="home-reviews-title">
       <Container>
         <SectionHeading
           eyebrow="From Our Community"

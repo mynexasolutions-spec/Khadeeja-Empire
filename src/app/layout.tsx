@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import "@/styles/globals.css";
 import { siteConfig } from "@/content/site";
+import NextTopLoader from "nextjs-toploader";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -55,6 +56,7 @@ export default function RootLayout({
           fontFamily: "var(--font-dm-sans), var(--font-body)",
         }}
       >
+        <NextTopLoader color="#000" showSpinner={false} />
         {children}
       </body>
     </html>

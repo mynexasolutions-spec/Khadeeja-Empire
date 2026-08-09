@@ -23,7 +23,7 @@ function configurationResponse(request: NextRequest, error: unknown): NextRespon
   return new NextResponse(message, { status: 500 });
 }
 
-export async function middleware(request: NextRequest): Promise<NextResponse> {
+export async function proxy(request: NextRequest): Promise<NextResponse> {
   const pathname = request.nextUrl.pathname;
   const isLogin = pathname === "/admin/login";
   let response = NextResponse.next();

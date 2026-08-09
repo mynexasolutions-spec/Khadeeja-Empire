@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { Container } from "@/components/ui/Container";
-import { ProductGrid } from "@/components/ui/ProductGrid";
+import { ShopCatalog } from "@/components/shop/ShopCatalog";
 import { getDataProvider } from "@/lib/data";
-import { toStorefrontCategory, toStorefrontCollection, toStorefrontProduct } from "@/lib/storefront/adapters";
+import {
+  toStorefrontCategory,
+  toStorefrontCollection,
+  toStorefrontProduct,
+} from "@/lib/storefront/adapters";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -14,76 +17,73 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const provider = getDataProvider();
-  const display = (await provider.getCollection(slug)) ?? (await provider.getCategory(slug));
-
-  return display
-    ? { title: display.name, description: display.description || undefined }
-    : { title: "Collection Not Found" };
+  try {
+    const provider = getDataProvider();
+    const display =
+      (await provider.getCollection(slug).catch(() => null)) ??
+      (await provider.getCategory(slug).catch(() => null));
+    const title =
+      display?.name ||
+      slug
+        .replace(/-/g, " ")
+        .replace(/\b\w/g, (l) => l.toUpperCase());
+    return { title, description: display?.description || undefined };
+  } catch {
+    return { title: "Collection" };
+  }
 }
 
 export default async function CollectionPage({ params }: PageProps) {
   const { slug } = await params;
-  const provider = getDataProvider();
-  const [collectionRecord, categoryRecord, productRecords, allCollections] = await Promise.all([
-    provider.getCollection(slug),
-    provider.getCategory(slug),
-    provider.listProducts({ active: true }),
-    provider.listCollections({ active: true }),
-  ]);
 
-  if (!collectionRecord && !categoryRecord) notFound();
+  let collectionRecord = null;
+  let categoryRecord = null;
+  let productRecords: any[] = [];
+  let categoryRecords: any[] = [];
 
-  const display = collectionRecord
-    ? toStorefrontCollection(collectionRecord)
-    : toStorefrontCategory(categoryRecord!);
-  const products = productRecords
-    .filter(
-      (product) =>
-        product.collectionSlug === slug ||
-        product.collection?.slug === slug ||
-        product.categorySlug === slug ||
-        product.category?.slug === slug
-    )
-    .map(toStorefrontProduct);
-  const otherCollections = allCollections.filter((collection) => collection.slug !== slug);
+  try {
+    const provider = getDataProvider();
+    const results = await Promise.all([
+      provider.getCollection(slug).catch(() => null),
+      provider.getCategory(slug).catch(() => null),
+      provider.listProducts({ active: true }).catch(() => []),
+      provider.listCategories({ active: true }).catch(() => []),
+    ]);
+    collectionRecord = results[0];
+    categoryRecord = results[1];
+    productRecords = results[2] || [];
+    categoryRecords = results[3] || [];
+  } catch (err) {
+    console.error("Error fetching collection page data:", err);
+  }
+
+  const categoryNames: Record<string, string> = {
+    "short-kurtis": "Short Kurtis",
+    "coord-sets": "Co-ord Sets",
+    "everyday-tops": "Everyday Tops",
+    dresses: "Dresses",
+    "resort-and-whites": "Resort & Whites",
+    "new-arrivals": "New Arrivals",
+  };
+
+  const displayName =
+    collectionRecord?.name ||
+    categoryRecord?.name ||
+    categoryNames[slug] ||
+    slug.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+
+  const products = productRecords.map(toStorefrontProduct);
+  const categories = categoryRecords.map(toStorefrontCategory);
 
   return (
-    <div className="py-12 md:py-16">
-      <Container>
-        <header className="mb-10 flex flex-col gap-2">
-          <h1 className="text-h1 text-ink">{display.name}</h1>
-          <p className="text-muted">
-            {products.length} {products.length === 1 ? "product" : "products"}
-          </p>
-        </header>
-
-        {otherCollections.length > 0 && (
-          <nav className="mb-10" aria-labelledby="other-collections-heading">
-            <h2 id="other-collections-heading" className="mb-4 text-h3 text-ink">
-              Explore other collections
-            </h2>
-            <div className="flex flex-wrap gap-3">
-              {otherCollections.map((collection) => (
-                <Link
-                  key={collection.id}
-                  href={`/collections/${collection.slug}`}
-                  className="border border-border px-4 py-2 text-sm text-ink transition-colors hover:border-ink"
-                >
-                  {collection.name}
-                </Link>
-              ))}
-            </div>
-          </nav>
-        )}
-
-        {products.length > 0 ? (
-          <ProductGrid products={products} columns={4} priorityCount={4} />
-        ) : (
-          <div className="py-12 text-center text-muted">
-            No active products in this collection yet.
-          </div>
-        )}
+    <div className="py-8 md:py-12">
+      <Container className="max-w-[1460px]">
+        <ShopCatalog
+          products={products}
+          categories={categories}
+          initialCategory={slug}
+          titleOverride={displayName}
+        />
       </Container>
     </div>
   );

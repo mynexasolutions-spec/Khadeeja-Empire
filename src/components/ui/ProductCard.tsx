@@ -1,70 +1,305 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { Heart, ShoppingBag, Check } from "lucide-react";
 import type { Product } from "@/types";
 import { formatPrice } from "@/lib/utils";
+import { useCart } from "@/hooks/useCart";
+import { useUI } from "@/hooks/useUI";
 import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
   product: Product;
   className?: string;
   priority?: boolean;
+  variant?: "grid" | "list";
 }
 
-export function ProductCard({ product, className, priority }: ProductCardProps) {
+export function ProductCard({
+  product,
+  className,
+  priority,
+  variant = "grid",
+}: ProductCardProps) {
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [added, setAdded] = useState(false);
+  const { addItem } = useCart();
+  const { openCart } = useUI();
   const hoverImage = product.images[1];
 
-  return (
-    <article className={cn("group flex flex-col", className)}>
-      <Link
-        href={`/products/${product.slug}`}
-        className="block relative aspect-product overflow-hidden bg-surface"
-        aria-label={`View ${product.name}`}
-      >
-        <Image
-          src={product.images[0]}
-          alt={product.name}
-          fill
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className={cn(
-            "object-cover transition duration-500 ease-out group-hover:scale-105",
-            hoverImage && "group-hover:opacity-0"
-          )}
-          priority={priority}
-        />
-        {hoverImage && (
-          <Image
-            src={hoverImage}
-            alt=""
-            fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover opacity-0 transition duration-500 ease-out group-hover:scale-105 group-hover:opacity-100"
-          />
-        )}
-        {product.badge && (
-          <span className="absolute top-3 left-3 bg-surface-elevated/95 text-ink text-xs uppercase tracking-wider px-3 py-1 font-medium">
-            {product.badge === "new" && "New"}
-            {product.badge === "featured" && "Featured"}
-            {product.badge === "sale" && "Sale"}
-          </span>
-        )}
-      </Link>
+  const handleQuickAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const defaultSize = product.sizes?.[0] || "M";
+    addItem(product, defaultSize);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1800);
+    openCart();
+  };
 
-      <div className="flex flex-col gap-1 pt-3">
-        <span className="text-xs uppercase tracking-wide text-muted">
-          {product.category.replace(/-/g, " ")}
-        </span>
-        <Link
-          href={`/products/${product.slug}`}
-          className="font-display text-lg text-ink hover:text-primary transition-colors leading-snug"
-        >
-          {product.name}
-        </Link>
-        <div className="flex items-center gap-2">
-          <span className="text-ink font-medium">{formatPrice(product.price, product.currency)}</span>
-          {product.priceStatus === "demo" && (
-            <span className="text-xs text-muted">(Demo price)</span>
+  // Horizontal List View Card Layout
+  if (variant === "list") {
+    return (
+      <article
+        className={cn(
+          "group bg-white rounded-lg p-4 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col sm:flex-row items-stretch gap-4 sm:gap-6 border-0 w-full",
+          className
+        )}
+      >
+        {/* Left Side: Product Image */}
+        <div className="relative w-full sm:w-48 md:w-56 aspect-[3/4] sm:aspect-square shrink-0 rounded-md overflow-hidden bg-[#F9F8F6]">
+          <Link
+            href={`/products/${product.slug}`}
+            className="block w-full h-full relative"
+            aria-label={`View ${product.name}`}
+          >
+            <Image
+              src={product.images[0]}
+              alt={product.name}
+              fill
+              sizes="(max-width: 640px) 100vw, 240px"
+              className={cn(
+                "object-cover transition duration-500 ease-out group-hover:scale-105",
+                hoverImage && "group-hover:opacity-0"
+              )}
+              priority={priority}
+            />
+            {hoverImage && (
+              <Image
+                src={hoverImage}
+                alt=""
+                fill
+                sizes="(max-width: 640px) 100vw, 240px"
+                className="object-cover opacity-0 transition duration-500 ease-out group-hover:scale-105 group-hover:opacity-100"
+              />
+            )}
+          </Link>
+
+          {/* Badges */}
+          {product.badge && (
+            <span
+              className={cn(
+                "absolute top-2 left-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm shadow-sm z-10",
+                product.badge === "featured" && "bg-[#C29B47] text-white",
+                product.badge === "new" && "bg-[#9C3D4D] text-white",
+                product.badge === "sale" && "bg-amber-600 text-white"
+              )}
+            >
+              {product.badge === "new" && "NEW"}
+              {product.badge === "featured" && "FEATURED"}
+              {product.badge === "sale" && "SALE"}
+            </span>
           )}
+
+          {/* Wishlist Button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsWishlisted(!isWishlisted);
+            }}
+            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-gray-700 hover:text-red-500 active:scale-90 transition-all z-10 shadow-sm"
+          >
+            <Heart
+              size={14}
+              className={cn(
+                "transition-colors",
+                isWishlisted ? "fill-red-500 text-red-500" : "text-gray-700 hover:text-red-500"
+              )}
+            />
+          </button>
         </div>
+
+        {/* Right Side: Details & Actions */}
+        <div className="flex flex-col justify-between flex-1 gap-3 py-1">
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
+                {product.category.replace(/-/g, " ")}
+              </span>
+            </div>
+
+            <Link
+              href={`/products/${product.slug}`}
+              className="font-serif text-lg sm:text-xl text-ink hover:text-primary transition-colors leading-snug font-semibold"
+            >
+              {product.name}
+            </Link>
+
+            {product.description && (
+              <p className="text-xs text-muted leading-relaxed line-clamp-2 mt-1">
+                {product.description}
+              </p>
+            )}
+
+            {/* Available Sizes Pills */}
+            {product.sizes && product.sizes.length > 0 && (
+              <div className="flex items-center gap-1.5 pt-2 flex-wrap">
+                <span className="text-[10px] font-semibold text-muted uppercase tracking-wider">Sizes:</span>
+                {product.sizes.map((s) => (
+                  <span
+                    key={s}
+                    className="px-2 py-0.5 text-[10px] font-semibold bg-gray-100 text-gray-700 rounded border border-gray-200"
+                  >
+                    {s}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Bottom Actions Row */}
+          <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold text-ink">
+                {formatPrice(product.price, product.currency)}
+              </span>
+              {product.priceStatus === "demo" && (
+                <span className="text-xs text-muted font-normal">(Demo price)</span>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={handleQuickAdd}
+              className={cn(
+                "inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border text-xs font-bold transition-all shadow-xs active:scale-95",
+                added
+                  ? "bg-green-600 text-white border-green-600"
+                  : "bg-[#FFFBF5] text-[#A37B34] border-[#D8C7B0] hover:bg-[#A37B34] hover:text-white hover:border-[#A37B34]"
+              )}
+            >
+              {added ? (
+                <>
+                  <Check size={16} />
+                  <span>Added to Cart</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingBag size={16} />
+                  <span>Add to Cart</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </article>
+    );
+  }
+
+  // Standard Grid View Card Layout
+  return (
+    <article
+      className={cn(
+        "group bg-white rounded-lg p-3 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between h-full border-0",
+        className
+      )}
+    >
+      <div>
+        {/* Product Image Box */}
+        <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-[#F9F8F6] mb-2.5">
+          <Link
+            href={`/products/${product.slug}`}
+            className="block w-full h-full relative"
+            aria-label={`View ${product.name}`}
+          >
+            <Image
+              src={product.images[0]}
+              alt={product.name}
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className={cn(
+                "object-cover transition duration-500 ease-out group-hover:scale-105",
+                hoverImage && "group-hover:opacity-0"
+              )}
+              priority={priority}
+            />
+            {hoverImage && (
+              <Image
+                src={hoverImage}
+                alt=""
+                fill
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                className="object-cover opacity-0 transition duration-500 ease-out group-hover:scale-105 group-hover:opacity-100"
+              />
+            )}
+          </Link>
+
+          {/* Badges */}
+          {product.badge && (
+            <span
+              className={cn(
+                "absolute top-2 left-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm shadow-sm z-10",
+                product.badge === "featured" && "bg-[#C29B47] text-white",
+                product.badge === "new" && "bg-[#9C3D4D] text-white",
+                product.badge === "sale" && "bg-amber-600 text-white"
+              )}
+            >
+              {product.badge === "new" && "NEW"}
+              {product.badge === "featured" && "FEATURED"}
+              {product.badge === "sale" && "SALE"}
+            </span>
+          )}
+
+          {/* Wishlist Button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsWishlisted(!isWishlisted);
+            }}
+            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-gray-700 hover:text-red-500 active:scale-90 transition-all z-10 shadow-sm"
+          >
+            <Heart
+              size={14}
+              className={cn(
+                "transition-colors",
+                isWishlisted ? "fill-red-500 text-red-500" : "text-gray-700 hover:text-red-500"
+              )}
+            />
+          </button>
+        </div>
+
+        {/* Product Details */}
+        <div className="flex flex-col gap-0.5 px-0.5">
+          <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted">
+            {product.category.replace(/-/g, " ")}
+          </span>
+          <Link
+            href={`/products/${product.slug}`}
+            className="font-serif text-[12.5px] sm:text-[14px] md:text-[15px] text-ink hover:text-primary transition-colors leading-snug font-semibold line-clamp-2 min-h-[36px]"
+          >
+            {product.name}
+          </Link>
+        </div>
+      </div>
+
+      {/* Price & Quick Add Shopping Bag Button */}
+      <div className="flex items-center justify-between pt-2 px-0.5 mt-1 border-t border-gray-100">
+        <span className="text-ink font-bold text-base">
+          {formatPrice(product.price, product.currency)}
+        </span>
+
+        <button
+          type="button"
+          onClick={handleQuickAdd}
+          aria-label={`Add ${product.name} to cart`}
+          title="Quick Add to Cart"
+          className={cn(
+            "w-8.5 h-8.5 rounded-lg border flex items-center justify-center transition-all shadow-xs active:scale-95 shrink-0",
+            added
+              ? "bg-green-600 text-white border-green-600"
+              : "bg-[#FFFBF5] text-[#A37B34] border-[#D8C7B0] hover:bg-[#A37B34] hover:text-white hover:border-[#A37B34]"
+          )}
+        >
+          {added ? <Check size={16} /> : <ShoppingBag size={16} />}
+        </button>
       </div>
     </article>
   );

@@ -7,7 +7,7 @@ import { signAdminSession } from "./lib/auth/session";
 
 vi.mock("server-only", () => ({}));
 
-import { middleware } from "./middleware";
+import { proxy } from "./proxy";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -19,21 +19,21 @@ function setAdminEnvironment() {
   vi.stubEnv("ADMIN_SESSION_SECRET", "admin-session-secret-for-route-tests-1234567890");
 }
 
-describe("admin middleware", () => {
+describe("admin proxy", () => {
   it("redirects unauthenticated admin pages and returns 401 for admin APIs", async () => {
     setAdminEnvironment();
 
-    const pageResponse = await middleware(new NextRequest("http://localhost/admin/orders"));
+    const pageResponse = await proxy(new NextRequest("http://localhost/admin/orders"));
     expect(pageResponse.status).toBe(307);
     expect(pageResponse.headers.get("location")).toContain("/admin/login");
 
-    const apiResponse = await middleware(new NextRequest("http://localhost/api/admin/media/signature"));
+    const apiResponse = await proxy(new NextRequest("http://localhost/api/admin/media/signature"));
     expect(apiResponse.status).toBe(401);
   });
 
   it("allows the login page and a valid signed admin session", async () => {
     setAdminEnvironment();
-    const loginResponse = await middleware(new NextRequest("http://localhost/admin/login"));
+    const loginResponse = await proxy(new NextRequest("http://localhost/admin/login"));
     expect(loginResponse.status).toBe(200);
 
     const config = getAdminAuthConfig();
@@ -42,6 +42,6 @@ describe("admin middleware", () => {
       headers: { cookie: `ke_admin_session=${token}` },
     });
 
-    expect((await middleware(request)).status).toBe(200);
+    expect((await proxy(request)).status).toBe(200);
   });
 });

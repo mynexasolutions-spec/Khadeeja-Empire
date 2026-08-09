@@ -11,10 +11,10 @@ export const siteConfig: SiteConfig = {
   ],
   email: "hello@khadeejaempire.com",
   phone: "+91 98765 43210",
-  instagram: "https://www.instagram.com/khadeejaempire/",
+  instagram: "https://www.instagram.com/khadeeja_empireofficial/",
   social: [
     {
-      instagram: "https://www.instagram.com/khadeejaempire/",
+      instagram: "https://www.instagram.com/khadeeja_empireofficial/",
       label: "Instagram",
     },
   ],

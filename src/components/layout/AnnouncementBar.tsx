@@ -6,7 +6,7 @@ function AnnouncementSequence({ messages, hidden = false }: { messages: string[]
     >
       {messages.map((message, index) => (
         <span key={message} className="flex items-center whitespace-nowrap">
-          <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-white">
+          <span className="text-[11.5px] sm:text-xs font-medium uppercase tracking-[0.17em] text-white">
             {message}
           </span>
           {index < messages.length - 1 && (

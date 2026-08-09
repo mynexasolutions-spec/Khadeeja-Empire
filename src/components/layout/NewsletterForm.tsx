@@ -32,8 +32,8 @@ export function NewsletterForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-2" noValidate>
-      <div className="footer-form-row">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-2 w-full" noValidate>
+      <div className="relative flex items-center rounded-lg border border-border/80 bg-white shadow-2xs overflow-hidden focus-within:border-[#b89565] transition-all">
         <input
           type="email"
           name="email"
@@ -45,22 +45,23 @@ export function NewsletterForm() {
           aria-describedby="newsletter-msg"
           disabled={pending}
           required
-          className="footer-form-input"
+          style={{ outline: "none", boxShadow: "none" }}
+          className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-transparent text-ink placeholder:text-muted/70 !outline-none border-none"
         />
         <button
           type="submit"
           aria-label="Subscribe to newsletter"
           aria-busy={pending}
           disabled={pending}
-          className="footer-form-button"
+          className="bg-[#b89565] hover:bg-[#a07e50] active:scale-95 text-white px-3.5 py-3 transition-colors flex items-center justify-center shrink-0"
         >
-          <ArrowRight className={pending ? "animate-pulse" : undefined} size={18} />
+          <ArrowRight className={pending ? "animate-pulse w-4 h-4" : "w-4 h-4"} />
         </button>
       </div>
       {message && (
         <p
           id="newsletter-msg"
-          className={cnText(status)}
+          className={status === "error" ? "text-xs text-red-600" : "text-xs text-emerald-600 font-medium"}
           role={status === "error" ? "alert" : "status"}
         >
           {message}
@@ -70,7 +71,3 @@ export function NewsletterForm() {
   );
 }
 
-function cnText(status: "idle" | "success" | "error") {
-  if (status === "error") return "text-xs text-red-700";
-  return "text-xs text-muted";
-}

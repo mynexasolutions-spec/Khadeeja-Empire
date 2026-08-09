@@ -13,6 +13,7 @@ interface DrawerProps {
   children: ReactNode;
   footer?: ReactNode;
   ariaLabel?: string;
+  hideCloseButton?: boolean;
 }
 
 export function Drawer({
@@ -23,6 +24,7 @@ export function Drawer({
   children,
   footer,
   ariaLabel,
+  hideCloseButton = false,
 }: DrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
@@ -106,13 +108,13 @@ export function Drawer({
             </IconButton>
           </div>
         )}
-        {!title && (
+        {!title && !hideCloseButton && (
           <button
             onClick={onClose}
             aria-label="Close drawer"
-            className="absolute top-4 right-4 z-10 inline-flex items-center justify-center min-w-[44px] min-h-[44px] text-ink hover:text-primary transition-colors"
+            className="absolute -top-1 right-2 z-10 inline-flex items-center justify-center min-w-[44px] min-h-[44px] text-ink hover:text-primary transition-colors"
           >
-            <X size={20} />
+            <X size={25} />
           </button>
         )}
         <div className="flex-1 overflow-y-auto">{children}</div>
