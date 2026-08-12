@@ -1,167 +1,190 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { LoaderCircle, MoveLeft, MoveRight } from "lucide-react";
+import { useState, useTransition } from "react";
+import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
+import { login, signup, resetPassword } from "./actions";
 
-const DEMO_OTP = "12345";
+type AuthMode = "login" | "signup" | "forgot";
 
 export function CustomerLoginForm({ next }: { next: string }) {
-  const [phone, setPhone] = useState("");
-  const [code, setCode] = useState("");
-  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const [mode, setMode] = useState<AuthMode>("login");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  async function requestOtp(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  // Form states
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     setError(null);
-    setPending(true);
+    setSuccess(null);
 
-    try {
-      const response = await fetch("/api/customer/request-otp", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ phone }),
-      });
-      const result = (await response.json().catch(() => null)) as { error?: string } | null;
-      if (!response.ok) throw new Error(result?.error ?? "We could not start sign-in.");
-      setStep("otp");
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "We could not start sign-in.");
-    } finally {
-      setPending(false);
-    }
-  }
+    const formData = new FormData();
+    formData.append("email", email);
+    if (password) formData.append("password", password);
+    if (fullName) formData.append("fullName", fullName);
+    if (next) formData.append("next", next);
 
-  async function verifyOtp(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-    setPending(true);
+    startTransition(async () => {
+      if (mode === "login") {
+        const res = await login(formData);
+        if (res?.error) setError(res.error);
+      } else if (mode === "signup") {
+        const res = await signup(formData);
+        if (res?.error) setError(res.error);
+        if (res?.success) setSuccess(res.success);
+      } else if (mode === "forgot") {
+        const res = await resetPassword(formData);
+        if (res?.error) setError(res.error);
+        if (res?.success) setSuccess(res.success);
+      }
+    });
+  };
 
-    try {
-      const response = await fetch("/api/customer/verify-otp", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ phone, code, next }),
-      });
-      const result = (await response.json().catch(() => null)) as {
-        error?: string;
-        redirectTo?: string;
-      } | null;
-      if (!response.ok) throw new Error(result?.error ?? "That code could not be verified.");
-      window.location.assign(result?.redirectTo ?? "/");
-    } catch (verificationError) {
-      setError(
-        verificationError instanceof Error
-          ? verificationError.message
-          : "That code could not be verified."
-      );
-      setPending(false);
-    }
-  }
+  const toggleMode = () => setMode(mode === "login" ? "signup" : "login");
 
   return (
-    <main className="flex min-h-[62vh] items-center justify-center px-4 py-16 sm:px-6">
-      <section
-        aria-labelledby="customer-login-title"
-        className="w-full max-w-[440px] border border-border bg-surface px-7 py-9 shadow-[0_18px_60px_rgba(75,47,31,0.09)] sm:px-10 sm:py-11"
-      >
-        <div className="mb-9 border-b border-border pb-7">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-primary">
-            Khadeeja Empire
-          </p>
-          <h1 id="customer-login-title" className="text-h2 text-ink">
-            Your place, held.
+    <main className="flex min-h-[75vh] items-center justify-center px-4 py-10 sm:px-6">
+      <section className="w-full max-w-[480px] bg-white border border-border px-8 py-8 shadow-sm rounded-none">
+        
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-display text-ink mb-2">
+            {mode === "login" && "Welcome Back"}
+            {mode === "signup" && "Create Account"}
+            {mode === "forgot" && "Reset Password"}
           </h1>
-          <p className="mt-3 text-sm leading-6 text-muted">
-            Sign in with your phone to keep your orders and saved details together.
+          <p className="text-sm text-muted">
+            {mode === "login" && "Login to continue to your account"}
+            {mode === "signup" && "Join Khadeeja Empire and shop your favorites"}
+            {mode === "forgot" && "Enter your email address to receive a password reset link."}
           </p>
         </div>
 
-        {error && (
-          <div role="alert" className="mb-5 border border-[#c9968e] bg-[#fbebe7] px-4 py-3 text-sm leading-5 text-maroon">
-            {error}
-          </div>
-        )}
+        <form onSubmit={handleSubmit} className="space-y-5 mb-3">
+          
+          {/* Full Name (Signup only) */}
+          {mode === "signup" && (
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-ink">Full Name</label>
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-muted h-5 w-5 stroke-[1.5]" />
+                <input 
+                  type="text" 
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Enter your full name" 
+                  className="w-full h-12 pl-12 pr-4 bg-white border border-border rounded-none focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors text-ink placeholder:text-muted/60"
+                  required
+                />
+              </div>
+            </div>
+          )}
 
-        {step === "phone" ? (
-          <form onSubmit={requestOtp} className="space-y-5">
-            <div>
-              <label htmlFor="customer-phone" className="mb-2 block text-sm font-medium text-ink">
-                Phone number
-              </label>
-              <input
-                id="customer-phone"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                value={phone}
-                onChange={(event) => setPhone(event.target.value)}
-                placeholder="+91 98765 43210"
+          {/* Email (All modes) */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-ink">Email Address</label>
+            <div className="relative">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted h-5 w-5 stroke-[1.5]" />
+              <input 
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email" 
+                className="w-full h-12 pl-12 pr-4 bg-white border border-border rounded-none focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors text-ink placeholder:text-muted/60"
                 required
-                className="min-h-12 w-full border border-border-strong bg-surface-elevated px-4 text-sm text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-accent/30"
               />
             </div>
-            <button
-              type="submit"
-              disabled={pending}
-              aria-busy={pending}
-              className="inline-flex min-h-12 w-full items-center justify-center gap-2 bg-ink px-5 text-sm font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-primary disabled:cursor-wait disabled:opacity-70"
-            >
-              {pending ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-              {pending ? "Preparing code" : "Continue"}
-              {!pending && <MoveRight className="h-4 w-4" aria-hidden="true" />}
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={verifyOtp} className="space-y-5">
-            <div className="border border-[#d7c7b7] bg-[#f5f0e8] px-4 py-3 text-sm leading-5 text-muted">
-              Demo sign-in code: <strong className="font-semibold text-ink">{DEMO_OTP}</strong>
+          </div>
+
+          {/* Password (Login & Signup only) */}
+          {mode !== "forgot" && (
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-ink">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted h-5 w-5 stroke-[1.5]" />
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={mode === "login" ? "Enter your password" : "Create a password"} 
+                  className="w-full h-12 pl-12 pr-12 bg-white border border-border rounded-none focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors text-ink placeholder:text-muted/60"
+                  required
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-ink transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5 stroke-[1.5]" /> : <Eye className="h-5 w-5 stroke-[1.5]" />}
+                </button>
+              </div>
+              {mode === "signup" && (
+                <p className="text-xs text-muted flex items-center gap-1.5 mt-2">
+                  <span className="text-[#a46e38] border border-[#a46e38] rounded-full w-3.5 h-3.5 flex items-center justify-center text-[8px] font-bold">✓</span>
+                  Password must be at least 6 characters
+                </p>
+              )}
             </div>
-            <div>
-              <label htmlFor="customer-otp" className="mb-2 block text-sm font-medium text-ink">
-                Five-digit code
+          )}
+
+          {/* Forgot Password & Remember me (Login only) */}
+          {mode === "login" && (
+            <div className="flex items-center justify-between pt-1">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" className="w-4 h-4 rounded-none border-border text-primary focus:ring-primary" />
+                <span className="text-sm text-ink">Remember me</span>
               </label>
-              <input
-                id="customer-otp"
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                pattern="[0-9]{5}"
-                maxLength={5}
-                value={code}
-                onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
-                required
-                className="min-h-12 w-full border border-border-strong bg-surface-elevated px-4 text-center text-lg tracking-[0.32em] text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-accent/30"
-              />
+              <button 
+                type="button"
+                onClick={() => setMode("forgot")}
+                className="text-sm text-[#a46e38] hover:underline"
+              >
+                Forgot password?
+              </button>
             </div>
-            <button
-              type="submit"
-              disabled={pending}
-              aria-busy={pending}
-              className="inline-flex min-h-12 w-full items-center justify-center gap-2 bg-ink px-5 text-sm font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-primary disabled:cursor-wait disabled:opacity-70"
-            >
-              {pending ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-              {pending ? "Verifying" : "Sign in"}
-              {!pending && <MoveRight className="h-4 w-4" aria-hidden="true" />}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setError(null);
-                setCode("");
-                setStep("phone");
-              }}
-              className="inline-flex min-h-11 w-full items-center justify-center gap-2 text-sm text-muted transition hover:text-primary"
-            >
-              <MoveLeft className="h-4 w-4" aria-hidden="true" />
-              Use a different number
-            </button>
-          </form>
-        )}
+          )}
+
+          {/* Submit Button */}
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+          {success && <p className="text-green-500 text-sm text-center">{success}</p>}
+          <button 
+            type="submit" 
+            disabled={isPending}
+            className="w-full h-12 bg-[#2d2520] hover:bg-primary text-white font-semibold tracking-widest text-sm rounded-none transition-colors mt-1 uppercase disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isPending ? "Please wait..." : (
+              <>
+                {mode === "login" && "LOGIN"}
+                {mode === "signup" && "SIGN UP"}
+                {mode === "forgot" && "SEND RESET LINK"}
+              </>
+            )}
+          </button>
+
+        </form>
+
+        {/* Footer Toggle */}
+        <p className="text-center text-sm text-ink mt-8">
+          {mode === "login" && "Don't have an account? "}
+          {mode === "signup" && "Already have an account? "}
+          {mode === "forgot" && "Remembered your password? "}
+          
+          <button 
+            onClick={() => setMode(mode === "login" ? "signup" : "login")} 
+            className="text-[#a46e38] font-semibold hover:underline"
+          >
+            {mode === "login" ? "Sign up" : "Login"}
+          </button>
+        </p>
+
       </section>
     </main>
   );
 }
+

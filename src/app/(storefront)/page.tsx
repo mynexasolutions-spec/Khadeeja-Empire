@@ -3,6 +3,8 @@ import { BehindTheAtelier } from "@/components/home/BehindTheAtelier";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { BrandIntro } from "@/components/home/BrandIntro";
 import { CollectionGrid } from "@/components/home/CollectionGrid";
+import { ExclusiveDeals } from "@/components/home/ExclusiveDeals";
+import { NewCollection } from "@/components/home/NewCollection";
 import { ProductRail } from "@/components/home/ProductRail";
 import { CraftStory } from "@/components/home/CraftStory";
 import { ValuesSection } from "@/components/home/ValuesSection";
@@ -65,6 +67,8 @@ export default async function HomePage() {
     <HomeTheme className={homeDisplay.variable}>
       <BehindTheAtelier />
       <CollectionGrid categories={categories.filter((item) => Boolean(item.image)).map(toStorefrontCategory)} />
+      <ExclusiveDeals />
+      <NewCollection products={products.filter((item) => (item.images?.length ?? 0) > 0).slice(0, 10).map(toStorefrontProduct)} />
       <ProductRail products={products.filter((item) => (item.images?.length ?? 0) > 0).slice(0, 6).map(toStorefrontProduct)} />
       <BrandIntro />
       <CraftStory />

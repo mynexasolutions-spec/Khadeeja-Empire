@@ -91,7 +91,7 @@ export function Drawer({
         aria-hidden={!open}
         aria-label={ariaLabel ?? title}
         className={cn(
-          "fixed top-0 bottom-0 z-[61] w-full max-w-md bg-surface shadow-lg flex flex-col transition-transform duration-300 ease-out",
+          "fixed top-0 bottom-0 z-[61] w-full max-w-md bg-white shadow-lg flex flex-col transition-transform duration-300 ease-out",
           side === "right" ? "right-0" : "left-0",
           open
             ? "translate-x-0"
@@ -101,7 +101,7 @@ export function Drawer({
         )}
       >
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-white">
             <h2 className="text-h3">{title}</h2>
             <IconButton onClick={onClose} ariaLabel="Close drawer">
               <X size={20} />
@@ -117,9 +117,9 @@ export function Drawer({
             <X size={25} />
           </button>
         )}
-        <div className="flex-1 overflow-y-auto">{children}</div>
+        <div className="flex-1 overflow-y-auto bg-white">{children}</div>
         {footer && (
-          <div className="border-t border-border p-6 bg-surface">{footer}</div>
+          <div className="border-t border-[#d8b88d]/30 px-6 pb-6 pt-4 bg-[#fdfaf5]">{footer}</div>
         )}
       </div>
     </>

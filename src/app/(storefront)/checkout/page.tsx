@@ -8,9 +8,8 @@ export const metadata: Metadata = {
 
 export default function CheckoutPage() {
   return (
-    <div className="py-12 md:py-16">
+    <div className="py-4 md:py-8">
       <Container>
-        <h1 className="text-h1 text-ink mb-8">Checkout</h1>
         <CheckoutForm />
       </Container>
     </div>

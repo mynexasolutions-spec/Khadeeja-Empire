@@ -776,6 +776,31 @@ img {
 /* ──────────────────────────────────────────────────────────────
    SCROLLBAR
    ────────────────────────────────────────────────────────────── */
+/* Global Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6%;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(173, 129, 80, 0.35); /* Soft brand accent color */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(173, 129, 80, 0.8);
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #6f302a transparent;
+}
+
+/* Hide scrollbar utility */
 .scrollbar-hide {
   scrollbar-width: none;
   -ms-overflow-style: none;

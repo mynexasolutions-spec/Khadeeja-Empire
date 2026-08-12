@@ -33,7 +33,7 @@ export function CollectionGrid({ categories }: { categories: Category[] }) {
             <span className="text-xs uppercase tracking-[0.18em] text-muted font-semibold">
               Curated Edits
             </span>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-[2.5rem] font-display font-bold text-ink leading-tight">
+            <h2 className="text-3xl md:text-[40px] md:leading-[44px] font-display font-medium text-ink leading-tight">
               Shop by Collection
             </h2>
             <p className="text-xs sm:text-sm md:text-[17px] text-muted leading-relaxed max-w-lg">

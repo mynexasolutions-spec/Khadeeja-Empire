@@ -7,6 +7,14 @@ import { placeDemoOrder, type CheckoutActionResult } from "@/actions/storefront/
 import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/Button";
 import { formatPrice } from "@/lib/utils";
+import Image from "next/image";
+import Link from "next/link";
+import { 
+  User, Mail, Phone, MapPin, Home, Building2, Map, Tag, Shield, 
+  Lock, ShoppingBag, Trash2, Minus, Plus, Truck, RotateCcw, Award,
+  ShieldCheck, ChevronDown, CheckCircle2, Building, Ticket, Compass,
+  ChevronRight
+} from "lucide-react";
 
 const schema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -24,13 +32,17 @@ type Confirmation = Extract<CheckoutActionResult, { ok: true }>["order"];
 
 export function CheckoutForm() {
   const router = useRouter();
-  const { items, subtotal, isHydrated, clearCart } = useCart();
+  const { items, subtotal, itemCount, removeItem, updateQuantity, isHydrated, clearCart } = useCart();
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState("");
   const [pending, startTransition] = useTransition();
   const attemptKey = useRef<string>("");
   const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", address2: "", city: "", state: "", pincode: "", couponCode: "" });
+
+  const freeShippingThreshold = 2000;
+  const progressPercentage = Math.min((subtotal / freeShippingThreshold) * 100, 100);
+  const amountNeeded = Math.max(0, freeShippingThreshold - subtotal);
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -66,11 +78,315 @@ export function CheckoutForm() {
     });
   };
 
-  if (!isHydrated) return <p className="py-12 text-center text-muted">Loading…</p>;
-  if (confirmation) return <div className="mx-auto flex max-w-md flex-col gap-4 py-16 text-center"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-surface"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg></div><h2 className="text-h2 text-ink">Order confirmed</h2><p className="text-muted">Your demo order <strong className="text-ink">#{confirmation.orderNumber}</strong> has been saved.</p><p className="border border-border bg-surface p-4 text-sm text-muted">Mock payment successful. No real payment method or financial details were collected. Total: {formatPrice(confirmation.total, confirmation.currency)}</p><Button href="/shop" variant="outline" className="mt-4">Continue shopping</Button></div>;
-  if (items.length === 0) return <div className="flex flex-col gap-4 py-16 text-center"><p className="text-h3 text-ink">Your bag is empty</p><Button href="/shop">Explore shop</Button></div>;
+  if (!isHydrated) return <div className="min-h-[40vh] flex items-center justify-center text-muted">Loading checkout…</div>;
+  
+  if (confirmation) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 md:py-24 px-6 bg-gradient-to-b from-white to-[#fcfaf7] rounded-3xl shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-[#d8b88d]/15 max-w-2xl mx-auto mt-4">
+        <div className="w-20 h-20 rounded-full bg-[#fdfaf5] shadow-sm border border-[#d8b88d]/20 flex items-center justify-center text-[#2e7d32] mb-8">
+          <CheckCircle2 size={40} strokeWidth={1.5} />
+        </div>
+        <h2 className="text-3xl font-display font-medium text-ink mb-3 text-center">Order Confirmed</h2>
+        <p className="text-muted text-center mb-8">
+          Your demo order <strong className="text-ink font-semibold">#{confirmation.orderNumber}</strong> has been successfully placed.
+        </p>
+        <div className="w-full bg-white rounded-2xl p-6 border border-[#d8b88d]/20 shadow-sm mb-8 text-center">
+          <p className="text-sm text-muted">
+            Mock payment successful. No real payment method or financial details were collected.
+          </p>
+          <div className="mt-4 pt-4 border-t border-[#d8b88d]/20 flex justify-between items-center max-w-xs mx-auto">
+            <span className="font-medium text-ink">Total Paid</span>
+            <span className="font-bold text-xl text-ink">{formatPrice(confirmation.total, confirmation.currency)}</span>
+          </div>
+        </div>
+        <Link
+          href="/shop"
+          className="inline-flex items-center justify-center px-8 py-3.5 rounded-xl bg-[#a27b53] text-white font-semibold text-[13px] tracking-[0.1em] uppercase hover:bg-[#8b6845] transition-all shadow-md active:scale-95"
+        >
+          Continue Shopping
+        </Link>
+      </div>
+    );
+  }
+  
+  if (items.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 px-6 max-w-2xl mx-auto mt-4 text-center">
+        <h2 className="text-3xl font-display font-medium text-ink mb-3">Your bag is empty</h2>
+        <p className="text-muted mb-8">You need items in your bag to checkout.</p>
+        <Link
+          href="/shop"
+          className="inline-flex items-center mt-5 justify-center px-8 py-3.5 bg-[#a27b53] text-white font-semibold text-[13px] tracking-[0.1em] uppercase hover:bg-[#8b6845] transition-all shadow-md active:scale-95"
+        >
+          Explore Shop
+        </Link>
+      </div>
+    );
+  }
 
-  const field = (name: keyof typeof form, label: string, type = "text") => <div className="flex flex-col gap-1.5"><label htmlFor={name} className="text-sm font-medium text-ink">{label}</label><input id={name} name={name} type={type} value={form[name]} onChange={(event)=>setForm({...form,[name]:event.target.value})} aria-invalid={!!errors[name]} aria-describedby={errors[name]?`${name}-error`:undefined} className="border border-border bg-surface px-4 py-3 outline-none transition-colors focus:border-ink"/>{errors[name]&&<p id={`${name}-error`} className="text-sm text-primary" role="alert">{errors[name]}</p>}</div>;
+  const field = (name: keyof typeof form, label: string, type = "text", placeholder = "", icon?: React.ReactNode, fullWidth = false) => (
+    <div className={`flex flex-col gap-1.5 w-full ${fullWidth ? "md:col-span-3" : ""}`}>
+      <label htmlFor={name} className="text-[14px] md:text-[15px] font-bold text-ink/80 mb-0.5">{label}</label>
+      <div className="relative">
+        <input 
+          id={name} 
+          name={name} 
+          type={type} 
+          placeholder={placeholder}
+          value={form[name]} 
+          onChange={(event)=>setForm({...form,[name]:event.target.value})} 
+          aria-invalid={!!errors[name]} 
+          aria-describedby={errors[name]?`${name}-error`:undefined} 
+          className="w-full border-[1px] border-[#6f302a] rounded-none bg-white px-4 py-3.5 text-[14px] text-ink outline-none transition-all focus:ring-1 focus:ring-[#6f302a] placeholder:text-muted/60"
+        />
+        {icon && (
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-muted/60">
+            {icon}
+          </div>
+        )}
+      </div>
+      {errors[name] && <p id={`${name}-error`} className="text-[12px] text-red-500 mt-1" role="alert">{errors[name]}</p>}
+    </div>
+  );
 
-  return <div className="grid gap-8 lg:grid-cols-3"><form onSubmit={handleSubmit} className="flex flex-col gap-6 lg:col-span-2" noValidate><div className="flex flex-col gap-4"><h2 className="text-h3">Contact details</h2>{field("name","Full name")}{field("email","Email","email")}{field("phone","Phone number","tel")}</div><div className="flex flex-col gap-4"><h2 className="text-h3">Shipping address</h2>{field("address","Street address")}{field("address2","Apartment, suite, etc. (optional)")}<div className="grid gap-4 sm:grid-cols-3">{field("city","City")}{field("state","State")}{field("pincode","Pincode")}</div></div><div className="flex flex-col gap-4"><h2 className="text-h3">Offer</h2>{field("couponCode","Coupon code (optional)")}<div className="border border-border bg-surface p-6"><p className="text-sm text-muted">Demo payment only. No card, bank, UPI, or other real payment details are requested.</p></div></div>{submitError&&<p className="border border-primary/30 bg-surface p-4 text-sm text-primary" role="alert">{submitError}</p>}<Button type="submit" className="w-full" disabled={pending}>{pending?"Placing demo order…":"Place demo order"}</Button></form><div className="lg:col-span-1"><div className="sticky top-24 flex flex-col gap-4 bg-surface p-6"><h2 className="text-h3">Order summary</h2><ul className="flex flex-col gap-3">{items.map(item=><li key={item.key} className="flex justify-between text-sm"><span className="text-muted">{item.product.name} × {item.quantity}</span><span className="font-medium text-ink">{formatPrice(item.product.price*item.quantity)}</span></li>)}</ul><div className="flex justify-between border-t border-border pt-4"><span className="font-medium text-ink">Estimated subtotal</span><span className="font-display text-xl text-ink">{formatPrice(subtotal)}</span></div><p className="text-xs text-muted">Shipping and coupon discounts are calculated securely when the order is placed.</p></div></div></div>;
+  return (
+    <div className="max-w-[1400px] mx-auto pb-20 pt-4 md:pt-6 px-4 md:px-6">
+      {/* Breadcrumb Nav */}
+      <nav className="flex items-center gap-1.5 text-[12px] md:text-[13px] font-medium tracking-wide text-muted mb-6 md:mb-8">
+        <Link className="hover:text-[#a27b53] transition-colors" href="/">Home</Link>
+        <ChevronRight size={14} className="opacity-40" strokeWidth={1.5} />
+        <span className="text-[#a27b53]">Checkout</span>
+      </nav>
+
+      <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+        
+        {/* Left Column: Checkout Form */}
+        <form onSubmit={handleSubmit} className="lg:col-span-7 xl:col-span-8 flex flex-col gap-3 md:gap-6" noValidate>
+          
+          <div>
+            <h1 className="text-3xl md:text-[40px] font-display font-medium text-ink mb-2">Checkout</h1>
+            <p className="text-sm text-muted">Please fill in your details to place the order</p>
+          </div>
+
+        {/* Contact and Shipping Form */}
+        <div className="flex flex-col gap-4">
+          <h2 className="text-2xl font-semibold text-ink leading-tight mb-2">Contact Details</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {field("name", "Full Name", "text", "Enter your full name", <User size={16} />)}
+            {field("email", "Email Address", "email", "Enter your email", <Mail size={16} />)}
+            {field("phone", "Phone Number", "tel", "Enter your phone number", <Phone size={16} />)}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {field("address", "Street Address", "text", "House no., Building, Street name", <Home size={16} />, true)}
+            {field("address2", "Apartment, suite, etc. (optional)", "text", "Apartment, suite, unit, etc.", <Building size={16} />, true)}
+            {field("city", "City", "text", "Enter your city", <Building2 size={16} />)}
+            {field("state", "State", "text", "Select state", <Compass size={16} />)}
+            {field("pincode", "Pincode", "text", "Enter pincode", <Map size={16} />)}
+          </div>
+        </div>
+
+        <hr className="border-[#d8b88d]/20" />
+
+        {/* Offer */}
+        <div className="flex flex-col gap-5">
+          <h2 className="text-2xl font-bold text-ink leading-tight font-semibold">Offer</h2>
+          <div className="flex gap-4 items-end">
+            <div className="flex-1 relative">
+              <input 
+                id="couponCode" 
+                name="couponCode" 
+                type="text" 
+                placeholder="Enter coupon code"
+                value={form.couponCode} 
+                onChange={(event)=>setForm({...form, couponCode:event.target.value})} 
+                className="w-full border-[1px] border-[#6f302a] rounded-none bg-white px-4 py-3.5 text-[14px] text-ink outline-none transition-all focus:ring-1 focus:ring-[#6f302a] placeholder:text-muted/60"
+              />
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-muted/60">
+                <Ticket size={16} />
+              </div>
+            </div>
+            <button 
+              type="button" 
+                className="px-6 py-3.5 rounded-none border border-[#a27b53] bg-[#a27b53] text-[#ffffff] text-[12px] font-bold tracking-[0.1em] hover:bg-[#fdfaf5] hover:text-[#a27b53] transition-colors uppercase cursor-pointer"
+              >
+              APPLY
+            </button>
+          </div>
+        </div>
+
+        {/* Demo Payment Alert */}
+        <div className="bg-[#fcfaf7] border border-[#d8b88d]/40 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4 shadow-sm transition-shadow hover:shadow-md">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white border border-[#d8b88d]/30 flex items-center justify-center text-[#a27b53] shrink-0 shadow-sm">
+            <Shield size={20} strokeWidth={1.5} />
+          </div>
+          <div>
+            <h4 className="text-[17px] sm:text-[19px] md:text-[22px] font-semibold text-dark mb-1">Demo Payment Mode</h4>
+            <p className="text-[12px] sm:text-[13px] text-muted leading-snug">
+              No card, bank, UPI, or other real payment details are requested.
+            </p>
+          </div>
+        </div>
+
+        {submitError && (
+          <p className="bg-red-50 border border-red-200 text-red-600 rounded-xl p-4 text-sm font-medium text-center shadow-sm" role="alert">
+            {submitError}
+          </p>
+        )}
+
+        {/* Actions */}
+        <div className="flex flex-col gap-4 mt-2">
+          <button 
+            type="submit" 
+            disabled={pending}
+            className="flex items-center justify-center gap-2 w-full bg-[#2a2420] text-white py-4.5 text-[13px] font-bold tracking-[0.1em] uppercase hover:bg-[#1a1612] transition-all shadow-md active:scale-95 disabled:opacity-70 disabled:pointer-events-none"
+          >
+            <Lock size={15} />
+            {pending ? "PROCESSING..." : "PLACE DEMO ORDER"}
+          </button>
+          <div className="flex items-center justify-center gap-1.5 text-muted">
+            <ShieldCheck size={14} />
+            <span className="text-[12px]">Your data is protected and encrypted</span>
+          </div>
+        </div>
+
+      </form>
+
+
+      {/* Right Column: Order Summary Card (Image 2 style) */}
+      <div className="lg:col-span-5 xl:col-span-4">
+        <div className="bg-[#fcfaf7] border border-[#d8b88d]/30 p-6 sm:p-8 flex flex-col gap-6 sticky top-24 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
+          <div className="flex items-center justify-between pb-4 border-b border-[#d8b88d]/20 mb-2">
+            <h2 className="text-xl md:text-2xl font-display font-medium text-ink flex items-center gap-3">
+              <ShoppingBag className="text-[#a27b53]" size={22} />
+              Order Summary
+            </h2>
+            <span className="text-sm font-medium text-ink bg-[#fdfaf5] px-3 py-1 rounded-full border border-[#d8b88d]/30 shadow-sm">
+              {itemCount} {itemCount === 1 ? 'item' : 'items'}
+            </span>
+          </div>
+          
+          <ul className="flex flex-col gap-6">
+            {items.map((item) => (
+              <li key={item.key} className="flex gap-4">
+                <div className="relative w-[60px] h-[75px] sm:w-[70px] sm:h-[85px] flex-shrink-0 overflow-hidden bg-white rounded-lg border border-[#d8b88d]/30">
+                  <Image
+                    src={item.product.images[0]}
+                    alt={item.product.name}
+                    fill
+                    sizes="70px"
+                    className="object-cover"
+                  />
+                </div>
+                <div className="flex flex-col flex-1 min-w-0 justify-between">
+                  <div className="flex justify-between gap-2">
+                    <span title={item.product.name} className="text-[13px] sm:text-[14px] font-medium text-ink leading-tight line-clamp-2">
+                      {item.product.name}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeItem(item.key)}
+                      aria-label="Remove item"
+                      className="text-muted hover:text-red-500 transition-colors p-1.5 border border-[#d8b88d]/30 rounded-md bg-white shadow-sm shrink-0 h-fit"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                  
+                  <span className="text-[11px] sm:text-[12px] text-muted">
+                    {formatPrice(item.product.price, item.product.currency)} each
+                  </span>
+                  
+                  <div className="flex items-center justify-between mt-1">
+                    <div className="flex items-center border border-[#d8b88d]/40 rounded-md bg-white h-7 shadow-sm overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => updateQuantity(item.key, item.quantity - 1)}
+                        className="w-7 h-full text-ink hover:bg-gray-50 transition-colors flex items-center justify-center border-r border-[#d8b88d]/20"
+                      >
+                        <Minus size={10} strokeWidth={2.5} />
+                      </button>
+                      <span className="w-8 text-[12px] font-bold text-center h-full flex items-center justify-center">
+                        {item.quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => updateQuantity(item.key, item.quantity + 1)}
+                        className="w-7 h-full text-ink hover:bg-gray-50 transition-colors flex items-center justify-center border-l border-[#d8b88d]/20"
+                      >
+                        <Plus size={10} strokeWidth={2.5} />
+                      </button>
+                    </div>
+                    
+                    <span className="text-[14px] font-bold text-ink">
+                      {formatPrice(item.product.price * item.quantity, item.product.currency)}
+                    </span>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {/* Progress Bar */}
+          <div className="bg-[#fdfaf5] border border-[#d8b88d]/30 rounded-xl p-4 sm:p-5 mt-2 shadow-sm">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="w-8 h-8 rounded-full bg-[#a27b53]/10 text-[#a27b53] flex items-center justify-center shrink-0">
+                <Truck size={16} strokeWidth={2} />
+              </div>
+              {progressPercentage < 100 ? (
+                <p className="text-[12px] text-ink font-medium leading-snug">
+                  Add <span className="font-bold">₹{amountNeeded.toLocaleString()}</span> more to get <span className="font-bold text-[#a27b53]">FREE Shipping!</span>
+                </p>
+              ) : (
+                <p className="text-[12px] text-ink font-medium leading-snug">
+                  Congratulations! You've unlocked <span className="font-bold text-[#a27b53]">FREE Shipping!</span>
+                </p>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-1.5 bg-[#f0ebe1] rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-[#a27b53] rounded-full transition-all duration-1000 ease-out" 
+                  style={{ width: `${progressPercentage}%` }}
+                />
+              </div>
+              <span className="text-[10px] font-bold text-muted shrink-0">₹2,000</span>
+            </div>
+          </div>
+
+          <div className="border-t border-[#d8b88d]/20 pt-5 flex flex-col gap-3">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted text-[13px]">Subtotal ({itemCount} {itemCount === 1 ? 'item' : 'items'})</span>
+              <span className="text-ink font-medium text-[14px]">{formatPrice(subtotal)}</span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted text-[13px]">Shipping</span>
+              <span className="text-ink text-[13px]">Calculated at checkout</span>
+            </div>
+          </div>
+
+          <div className="border-t border-[#d8b88d]/20 pt-5 flex flex-col gap-5">
+            <div className="flex justify-between items-end">
+              <span className="font-bold text-ink text-[16px]">Estimated Total</span>
+              <span className="font-display text-2xl text-ink font-bold">{formatPrice(subtotal)}</span>
+            </div>
+            
+            <button
+              onClick={handleSubmit}
+              disabled={pending}
+              className="flex items-center justify-center gap-2 w-full bg-[#2a2420] text-white  py-4 sm:py-4.5 text-[12px] font-bold tracking-[0.1em] hover:bg-[#1a1612] transition-all shadow-md active:scale-95 disabled:opacity-70 disabled:pointer-events-none"
+            >
+              <Lock size={15} />
+              SECURE CHECKOUT
+            </button>
+            
+
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+  );
 }

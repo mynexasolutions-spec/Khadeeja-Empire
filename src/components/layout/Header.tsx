@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, Menu, Search, ShoppingBag } from "lucide-react";
+import { ChevronDown, Menu, Search, ShoppingBag, User, Heart } from "lucide-react";
 import { useUI } from "@/hooks/useUI";
 import { useCart } from "@/hooks/useCart";
+import { useWishlist } from "@/hooks/useWishlist";
 import { siteConfig } from "@/content/site";
 import { cn } from "@/lib/utils";
 import { IconButton } from "@/components/ui/IconButton";
@@ -15,6 +16,7 @@ export function Header({ discoveryLinks }: { discoveryLinks: { label: string; hr
   const pathname = usePathname();
   const { openSearch, openCart, openMobileNav } = useUI();
   const { itemCount } = useCart();
+  const { itemCount: wishlistCount } = useWishlist();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -217,30 +219,49 @@ export function Header({ discoveryLinks }: { discoveryLinks: { label: string; hr
         </Link>
 
         {/* Right CTA Actions */}
-        <div className="nav-cta flex items-center gap-1.5">
+        <div className="nav-cta flex items-center gap-2 md:gap-3">
           <IconButton
             onClick={openSearch}
             ariaLabel="Search products"
-            className="nav-icon-btn rounded-full hover:bg-black/5 transition-all active:scale-95"
+            className="w-10 h-10 md:w-[46px] md:h-[46px] rounded-full bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-[#d8b88d]/20 hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 text-ink hover:text-primary transition-all duration-300 active:scale-95 hidden md:flex items-center justify-center shrink-0"
           >
-            <Search className="h-5 w-5 stroke-[1.5]" aria-hidden="true" />
+            <Search className="h-[18px] w-[18px] md:h-5 md:w-5 stroke-[1.5]" aria-hidden="true" />
           </IconButton>
+          
+          <Link
+            href="/login"
+            aria-label="Account"
+            className="w-10 h-10 md:w-[46px] md:h-[46px] rounded-full bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-[#d8b88d]/20 hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 text-ink hover:text-primary transition-all duration-300 active:scale-95 items-center justify-center shrink-0 hidden sm:flex"
+          >
+            <User className="h-[18px] w-[18px] md:h-5 md:w-5 stroke-[1.5]" aria-hidden="true" />
+          </Link>
+
+          <Link
+            href="/wishlist"
+            aria-label="Wishlist"
+            className="w-10 h-10 md:w-[46px] md:h-[46px] rounded-full bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-[#d8b88d]/20 hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 text-ink hover:text-primary transition-all duration-300 active:scale-95 flex items-center justify-center shrink-0 hidden md:flex"
+          >
+            <span className="relative inline-flex items-center justify-center">
+              <Heart className="h-[18px] w-[18px] md:h-5 md:w-5 stroke-[1.5]" aria-hidden="true" />
+              <span className="absolute -top-2.5 -right-2.5 md:-top-2.5 md:-right-3 min-w-[18px] h-[18px] md:min-w-[20px] md:h-[20px] rounded-full bg-[#a27b53] text-white text-[10px] md:text-[11px] font-bold flex items-center justify-center px-1 animate-in zoom-in-50 duration-200 shadow-sm border-[1.5px] border-white">
+                {wishlistCount > 99 ? "99+" : wishlistCount}
+              </span>
+            </span>
+          </Link>
           
           <IconButton
             onClick={openCart}
             ariaLabel={`Open cart, ${itemCount} items`}
-            className="nav-icon-btn rounded-full hover:bg-black/5 transition-all active:scale-95"
+            className="w-10 h-10 md:w-[46px] md:h-[46px] rounded-full bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-[#d8b88d]/20 hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 text-ink hover:text-primary transition-all duration-300 active:scale-95 flex items-center justify-center shrink-0"
           >
             <span className="relative inline-flex items-center justify-center">
               <ShoppingBag
-                className="h-5 w-5 stroke-[1.5]"
+                className="h-[18px] w-[18px] md:h-5 md:w-5 stroke-[1.5]"
                 aria-hidden="true"
               />
-              {itemCount > 0 && (
-                <span className="nav-cart-badge animate-in zoom-in-50 duration-200">
-                  {itemCount > 99 ? "99+" : itemCount}
-                </span>
-              )}
+              <span className="absolute -top-2.5 -right-2.5 md:-top-2.5 md:-right-3 min-w-[18px] h-[18px] md:min-w-[20px] md:h-[20px] rounded-full bg-[#a27b53] text-white text-[10px] md:text-[11px] font-bold flex items-center justify-center px-1 animate-in zoom-in-50 duration-200 shadow-sm border-[1.5px] border-white">
+                {itemCount > 99 ? "99+" : itemCount}
+              </span>
             </span>
           </IconButton>
         </div>

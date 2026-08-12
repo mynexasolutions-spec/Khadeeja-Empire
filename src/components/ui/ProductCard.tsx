@@ -3,31 +3,40 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Heart, ShoppingBag, Check } from "lucide-react";
+import { Heart, ShoppingBag, Check, Trash2 } from "lucide-react";
 import type { Product } from "@/types";
 import { formatPrice } from "@/lib/utils";
 import { useCart } from "@/hooks/useCart";
+import { useWishlist } from "@/hooks/useWishlist";
 import { useUI } from "@/hooks/useUI";
 import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
   product: Product;
   className?: string;
+  imageClassName?: string;
   priority?: boolean;
   variant?: "grid" | "list";
+  isWishlistPage?: boolean;
+  onRemove?: () => void;
 }
 
 export function ProductCard({
   product,
   className,
+  imageClassName,
   priority,
   variant = "grid",
+  isWishlistPage,
+  onRemove,
 }: ProductCardProps) {
-  const [isWishlisted, setIsWishlisted] = useState(false);
   const [added, setAdded] = useState(false);
   const { addItem } = useCart();
+  const { hasItem, addItem: addWishlist, removeItem: removeWishlist } = useWishlist();
   const { openCart } = useUI();
   const hoverImage = product.images[1];
+
+  const isWishlisted = hasItem(product.id);
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -93,25 +102,44 @@ export function ProductCard({
             </span>
           )}
 
-          {/* Wishlist Button */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsWishlisted(!isWishlisted);
-            }}
-            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-gray-700 hover:text-red-500 active:scale-90 transition-all z-10 shadow-sm"
-          >
-            <Heart
-              size={14}
-              className={cn(
-                "transition-colors",
-                isWishlisted ? "fill-red-500 text-red-500" : "text-gray-700 hover:text-red-500"
-              )}
-            />
-          </button>
+          {/* Wishlist / Remove Button */}
+          {isWishlistPage ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onRemove?.();
+              }}
+              aria-label="Remove from wishlist"
+              className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-gray-700 hover:text-red-500 active:scale-90 transition-all z-10 shadow-sm"
+            >
+              <Trash2 size={14} className="transition-colors text-gray-700 hover:text-red-500" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (isWishlisted) {
+                  removeWishlist(product.id);
+                } else {
+                  addWishlist(product);
+                }
+              }}
+              aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+              className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-gray-700 hover:text-red-500 active:scale-90 transition-all z-10 shadow-sm"
+            >
+              <Heart
+                size={14}
+                className={cn(
+                  "transition-colors",
+                  isWishlisted ? "fill-red-500 text-red-500" : "text-gray-700 hover:text-red-500"
+                )}
+              />
+            </button>
+          )}
         </div>
 
         {/* Right Side: Details & Actions */}
@@ -195,13 +223,13 @@ export function ProductCard({
   return (
     <article
       className={cn(
-        "group bg-white rounded-lg p-3 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between h-full border-0",
+        "group bg-white rounded-xl p-2.5 sm:p-3 border border-[#f0ebe1] hover:border-[#d8b88d]/50 hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-300 flex flex-col justify-between h-full",
         className
       )}
     >
       <div>
         {/* Product Image Box */}
-        <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-[#F9F8F6] mb-2.5">
+        <div className={cn("relative overflow-hidden rounded-md bg-[#F9F8F6] mb-2.5", imageClassName || "aspect-[3/4]")}>
           <Link
             href={`/products/${product.slug}`}
             className="block w-full h-full relative"
@@ -245,25 +273,44 @@ export function ProductCard({
             </span>
           )}
 
-          {/* Wishlist Button */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsWishlisted(!isWishlisted);
-            }}
-            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-gray-700 hover:text-red-500 active:scale-90 transition-all z-10 shadow-sm"
-          >
-            <Heart
-              size={14}
-              className={cn(
-                "transition-colors",
-                isWishlisted ? "fill-red-500 text-red-500" : "text-gray-700 hover:text-red-500"
-              )}
-            />
-          </button>
+          {/* Wishlist / Remove Button */}
+          {isWishlistPage ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onRemove?.();
+              }}
+              aria-label="Remove from wishlist"
+              className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center text-gray-500 hover:text-red-500 hover:scale-110 active:scale-90 transition-all z-10"
+            >
+              <Trash2 size={14} className="transition-colors" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (isWishlisted) {
+                  removeWishlist(product.id);
+                } else {
+                  addWishlist(product);
+                }
+              }}
+              aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+              className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 hover:scale-110 active:scale-90 transition-all z-10"
+            >
+              <Heart
+                size={14}
+                className={cn(
+                  "transition-colors",
+                  isWishlisted ? "fill-red-500 text-red-500" : "hover:text-red-500"
+                )}
+              />
+            </button>
+          )}
         </div>
 
         {/* Product Details */}

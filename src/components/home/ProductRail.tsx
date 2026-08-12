@@ -209,27 +209,7 @@ export function ProductRail({ products }: { products: Product[] }) {
           </Link>
         </div>
 
-        {/* Bottom Store USP Feature Bar */}
-        <div className="mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-border/50 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 bg-surface/70 backdrop-blur-sm rounded-2xl md:rounded-3xl p-4 sm:p-6 border border-border/60 shadow-sm">
-          {STORE_USPS.map((usp) => {
-            const Icon = usp.icon;
-            return (
-              <div key={usp.title} className="flex items-center gap-2.5 sm:gap-3">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/5 border border-primary/15 flex items-center justify-center text-primary shrink-0">
-                  <Icon size={16} className="sm:w-[18px] sm:h-[18px]" />
-                </div>
-                <div>
-                  <h4 className="text-[11px] sm:text-xs font-bold text-ink tracking-tight">
-                    {usp.title}
-                  </h4>
-                  <p className="text-[10px] sm:text-[11px] text-muted leading-tight mt-0.5">
-                    {usp.subtitle}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+
       </Container>
     </section>
   );
