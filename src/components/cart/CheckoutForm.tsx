@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
-import { placeDemoOrder, type CheckoutActionResult } from "@/actions/storefront/checkout";
+import { placeDemoOrder, previewCouponAction, type CheckoutActionResult } from "@/actions/storefront/checkout";
 import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/Button";
 import { formatPrice } from "@/lib/utils";
@@ -37,8 +37,12 @@ export function CheckoutForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState("");
   const [pending, startTransition] = useTransition();
+  const [couponPending, startCouponTransition] = useTransition();
   const attemptKey = useRef<string>("");
   const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", address2: "", city: "", state: "", pincode: "", couponCode: "" });
+  const [appliedCode, setAppliedCode] = useState<string | null>(null);
+  const [couponDiscount, setCouponDiscount] = useState<number | null>(null);
+  const [couponMessage, setCouponMessage] = useState("");
 
   const freeShippingThreshold = 2000;
   const progressPercentage = Math.min((subtotal / freeShippingThreshold) * 100, 100);
@@ -75,6 +79,26 @@ export function CheckoutForm() {
       }
       setConfirmation(result.order);
       clearCart();
+    });
+  };
+
+  const handleApplyCoupon = () => {
+    const code = form.couponCode.trim();
+    if (!code) {
+      setCouponMessage("Enter a coupon code.");
+      return;
+    }
+    startCouponTransition(async () => {
+      const result = await previewCouponAction(code, subtotal);
+      if (result.valid && result.code) {
+        setAppliedCode(result.code);
+        setCouponDiscount(result.discount ?? 0);
+        setCouponMessage("");
+      } else {
+        setAppliedCode(null);
+        setCouponDiscount(null);
+        setCouponMessage(result.message ?? "That coupon could not be applied.");
+      }
     });
   };
 
@@ -200,7 +224,14 @@ export function CheckoutForm() {
                 type="text" 
                 placeholder="Enter coupon code"
                 value={form.couponCode} 
-                onChange={(event)=>setForm({...form, couponCode:event.target.value})} 
+                onChange={(event)=>{
+                  setForm({...form, couponCode:event.target.value});
+                  if (appliedCode) {
+                    setAppliedCode(null);
+                    setCouponDiscount(null);
+                    setCouponMessage("");
+                  }
+                }} 
                 className="w-full border-[1px] border-[#6f302a] rounded-none bg-white px-4 py-3.5 text-[14px] text-ink outline-none transition-all focus:ring-1 focus:ring-[#6f302a] placeholder:text-muted/60"
               />
               <div className="absolute right-4 top-1/2 -translate-y-1/2 text-muted/60">
@@ -209,11 +240,20 @@ export function CheckoutForm() {
             </div>
             <button 
               type="button" 
-                className="px-6 py-3.5 rounded-none border border-[#a27b53] bg-[#a27b53] text-[#ffffff] text-[12px] font-bold tracking-[0.1em] hover:bg-[#fdfaf5] hover:text-[#a27b53] transition-colors uppercase cursor-pointer"
+              onClick={handleApplyCoupon}
+              disabled={couponPending}
+              className="px-6 py-3.5 rounded-none border border-[#a27b53] bg-[#a27b53] text-[#ffffff] text-[12px] font-bold tracking-[0.1em] hover:bg-[#fdfaf5] hover:text-[#a27b53] transition-colors uppercase cursor-pointer disabled:opacity-70 disabled:pointer-events-none"
               >
-              APPLY
+              {couponPending ? "CHECKING..." : "APPLY"}
             </button>
           </div>
+          {appliedCode ? (
+            <p className="text-[12px] text-[#2e7d32] font-medium mt-1">
+              Applied {appliedCode}
+            </p>
+          ) : couponMessage ? (
+            <p className="text-[12px] text-red-500 font-medium mt-1" role="alert">{couponMessage}</p>
+          ) : null}
         </div>
 
         {/* Demo Payment Alert */}
@@ -361,6 +401,12 @@ export function CheckoutForm() {
               <span className="text-muted text-[13px]">Subtotal ({itemCount} {itemCount === 1 ? 'item' : 'items'})</span>
               <span className="text-ink font-medium text-[14px]">{formatPrice(subtotal)}</span>
             </div>
+            {appliedCode && couponDiscount != null && (
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted text-[13px]">Discount ({appliedCode})</span>
+                <span className="text-[#2e7d32] font-medium text-[14px]">-{formatPrice(couponDiscount)}</span>
+              </div>
+            )}
             <div className="flex justify-between items-center text-sm">
               <span className="text-muted text-[13px]">Shipping</span>
               <span className="text-ink text-[13px]">Calculated at checkout</span>
@@ -370,7 +416,7 @@ export function CheckoutForm() {
           <div className="border-t border-[#d8b88d]/20 pt-5 flex flex-col gap-5">
             <div className="flex justify-between items-end">
               <span className="font-bold text-ink text-[16px]">Estimated Total</span>
-              <span className="font-display text-2xl text-ink font-bold">{formatPrice(subtotal)}</span>
+              <span className="font-display text-2xl text-ink font-bold">{formatPrice(Math.max(0, subtotal - (couponDiscount ?? 0)))}</span>
             </div>
             
             <button

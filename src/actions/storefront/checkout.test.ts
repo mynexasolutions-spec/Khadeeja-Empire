@@ -12,7 +12,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("../../lib/auth/server", () => ({ requireCustomer: requireCustomerMock }));
 vi.mock("../../lib/data", () => ({ getDataProvider: getDataProviderMock }));
 
-import { placeDemoOrder } from "./checkout";
+import { placeDemoOrder, previewCouponAction } from "./checkout";
 
 const input = {
   idempotencyKey: "checkout_attempt_123",
@@ -103,5 +103,78 @@ describe("placeDemoOrder", () => {
     });
 
     await expect(placeDemoOrder(input)).resolves.toMatchObject({ ok: true, replayed: true });
+  });
+
+  it("applies a valid coupon and increments its used count", async () => {
+    const createOrder = vi.fn(async (order) => ({
+      ...order,
+      id: "order-coupon",
+      orderNumber: order.orderNumber,
+    }));
+    const incrementCouponUse = vi.fn().mockResolvedValue({ id: "coupon-1", usedCount: 1 });
+    const data = {
+      getOrder: vi.fn().mockResolvedValue(null),
+      getCustomer: vi.fn().mockResolvedValue({ id: "customer-1", phone: "+919876543210" }),
+      updateCustomer: vi.fn().mockResolvedValue({ id: "customer-1" }),
+      getProduct: vi.fn().mockResolvedValue({
+        id: "product-1",
+        slug: "demo-product",
+        name: "Demo Product",
+        price: 1000,
+        currency: "INR",
+        active: true,
+        availability: "in-stock",
+        sizes: ["M"],
+      }),
+      listCoupons: vi.fn().mockResolvedValue([
+        {
+          id: "coupon-1",
+          code: "SAVE10",
+          discountType: "percentage",
+          discountValue: 10,
+          active: true,
+          usedCount: 0,
+          maximumUses: 2,
+        },
+      ]),
+      listShippingRates: vi.fn().mockResolvedValue([
+        { id: "standard", name: "Standard", amount: 99, active: true },
+      ]),
+      createOrder,
+      incrementCouponUse,
+    };
+    getDataProviderMock.mockReturnValue(data);
+
+    const result = await placeDemoOrder({ ...input, couponCode: "save10" });
+
+    expect(result).toMatchObject({ ok: true, replayed: false, order: { total: 999 } });
+    expect(incrementCouponUse).toHaveBeenCalledWith("coupon-1");
+  });
+});
+
+describe("previewCouponAction", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("previews a valid coupon discount", async () => {
+    getDataProviderMock.mockReturnValue({
+      listCoupons: vi.fn().mockResolvedValue([
+        {
+          id: "coupon-1",
+          code: "SAVE10",
+          discountType: "percentage",
+          discountValue: 10,
+          active: true,
+          usedCount: 0,
+        },
+      ]),
+    });
+
+    await expect(previewCouponAction("SAVE10", 1000)).resolves.toEqual({
+      valid: true,
+      code: "SAVE10",
+      discount: 100,
+    });
   });
 });

@@ -11,11 +11,13 @@ export default function Loading() {
         {/* Inner static circle with logo */}
         <div className="absolute inset-2 rounded-full bg-surface flex items-center justify-center overflow-hidden shadow-sm">
            <div className="relative w-20 h-20 flex items-center justify-center">
-             <Image
-               src={siteConfig.logo}
-               alt="Loading..."
-               className="object-contain"
-             />
+              <Image
+                src={siteConfig.logo}
+                alt="Loading..."
+                fill
+                sizes="80px"
+                className="object-contain"
+              />
            </div>
         </div>
       </div>

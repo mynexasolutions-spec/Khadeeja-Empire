@@ -43,6 +43,13 @@ export default async function HomePage() {
       provider.getPromoSettings(),
     ]);
 
+  const sorted = [...products].sort((a, b) => {
+    const aFeatured = a.featured === true ? 1 : 0;
+    const bFeatured = b.featured === true ? 1 : 0;
+    if (aFeatured !== bFeatured) return bFeatured - aFeatured;
+    return (b.createdAt ?? "").localeCompare(a.createdAt ?? "");
+  });
+
   const publicReviews: PublicReviewItem[] = [
     ...testimonials.map((item) => ({
       id: item.id,
@@ -66,10 +73,10 @@ export default async function HomePage() {
   return (
     <HomeTheme className={homeDisplay.variable}>
       <BehindTheAtelier />
-      <CollectionGrid categories={categories.filter((item) => Boolean(item.image)).map(toStorefrontCategory)} />
+      <CollectionGrid categories={categories.map(toStorefrontCategory)} />
       <ExclusiveDeals />
-      <NewCollection products={products.filter((item) => (item.images?.length ?? 0) > 0).slice(0, 10).map(toStorefrontProduct)} />
-      <ProductRail products={products.filter((item) => (item.images?.length ?? 0) > 0).slice(0, 6).map(toStorefrontProduct)} />
+      <NewCollection products={sorted.slice(0, 10).map(toStorefrontProduct)} />
+      <ProductRail products={sorted.slice(0, 6).map(toStorefrontProduct)} />
       <BrandIntro />
       <CraftStory />
       <ValuesSection />

@@ -23,6 +23,8 @@ const asCategorySlug = (slug: string | null | undefined): CategorySlug =>
 const asCollectionSlug = (slug: string | null | undefined): CollectionSlug =>
   (slug ?? "new-arrivals") as CollectionSlug;
 
+const fallbackImage = "/assets/slides/girl-1.png";
+
 function imageUrl(image: ProductImageRecord | string): string {
   return typeof image === "string" ? image : image.url;
 }
@@ -42,7 +44,7 @@ export function toStorefrontProduct(record: ProductRecord): Product {
     description: record.description ?? record.shortDescription ?? "",
     images: (record.images ?? []).map(imageUrl).filter(Boolean).length
       ? (record.images ?? []).map(imageUrl).filter(Boolean)
-      : ["/assets/slides/girl-1.png"],
+      : [fallbackImage],
     video: record.video ?? undefined,
     price: record.price ?? 0,
     currency: record.currency ?? "INR",
@@ -63,7 +65,7 @@ export function toStorefrontCategory(record: CategoryRecord): Category {
     slug: asCategorySlug(record.slug),
     name: record.name,
     description: record.description ?? "",
-    image: record.image ?? "",
+    image: record.image || fallbackImage,
   };
 }
 

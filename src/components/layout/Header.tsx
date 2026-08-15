@@ -11,8 +11,9 @@ import { siteConfig } from "@/content/site";
 import { cn } from "@/lib/utils";
 import { IconButton } from "@/components/ui/IconButton";
 import { BrandLogo } from "./BrandLogo";
+import type { Category } from "@/types";
 
-export function Header({ discoveryLinks }: { discoveryLinks: { label: string; href: string }[] }) {
+export function Header({ discoveryLinks, categories }: { discoveryLinks: { label: string; href: string }[]; categories: Category[] }) {
   const pathname = usePathname();
   const { openSearch, openCart, openMobileNav } = useUI();
   const { itemCount } = useCart();
@@ -85,10 +86,13 @@ export function Header({ discoveryLinks }: { discoveryLinks: { label: string; hr
               item.href &&
               (pathname === item.href ||
                 (item.href !== "/shop" && pathname.startsWith(item.href)));
+            const shopLinks = [{ label: "Shop All", href: "/shop" }, ...categories.map((c) => ({ label: c.name, href: `/collections/${c.slug}` }))];
             const menuLinks =
               item.label === "Shop" && discoveryLinks.length
                 ? [{ label: "Shop All", href: "/shop" }, ...discoveryLinks]
-                : item.megaMenu?.links;
+                : item.label === "Shop" && categories.length
+                  ? shopLinks
+                  : item.megaMenu?.links;
 
             return (
               <div

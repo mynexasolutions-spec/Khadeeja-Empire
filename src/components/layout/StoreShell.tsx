@@ -23,9 +23,9 @@ export function StoreShell({ children, announcements, products, categories, disc
             Skip to content
           </a>
           <AnnouncementBar messages={announcements} />
-          <Header discoveryLinks={discoveryLinks} />
+          <Header discoveryLinks={discoveryLinks} categories={categories} />
           <main id="main-content">{children}</main>
-          <Footer />
+          <Footer categories={categories} />
           <SearchDrawer products={products} />
           <CartDrawer />
           <MobileNav categories={categories} />

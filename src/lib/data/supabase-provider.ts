@@ -475,8 +475,12 @@ export class SupabaseDataProvider implements DataProvider {
   }
 
   async getOrder(idOrNumber: string): Promise<OrderRecord | null> {
-    const order = await this.getRow<OrderRecord>("orders", idOrNumber, true);
-    return order ? this.hydrateOrder(order) : null;
+    const byId = await this.client.from("orders").select("*").eq("id", idOrNumber).maybeSingle();
+    if (byId.error) this.translateError(byId.error, "Could not read orders.");
+    if (byId.data) return this.hydrateOrder(fromRow<OrderRecord>(byId.data));
+    const byNumber = await this.client.from("orders").select("*").eq("order_number", idOrNumber).maybeSingle();
+    if (byNumber.error) this.translateError(byNumber.error, "Could not read orders.");
+    return byNumber.data ? this.hydrateOrder(fromRow<OrderRecord>(byNumber.data)) : null;
   }
 
   async createOrder(input: OrderMutationInput): Promise<OrderRecord> {
@@ -704,6 +708,12 @@ export class SupabaseDataProvider implements DataProvider {
 
   setCouponActive(couponId: string, active: boolean) {
     return this.updateCoupon(couponId, { active });
+  }
+
+  async incrementCouponUse(couponId: string): Promise<CouponRecord> {
+    const existing = await this.getRow<CouponRecord>("coupons", couponId);
+    if (!existing) throw new NotFoundError("Coupon");
+    return this.updateRow<CouponRecord>("coupons", couponId, { usedCount: (existing.usedCount ?? 0) + 1 }, "Could not update coupon.");
   }
 
   listShippingRates(options?: ListOptions) {

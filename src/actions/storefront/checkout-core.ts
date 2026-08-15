@@ -80,8 +80,16 @@ export interface CheckoutQuote {
   discount: number;
   total: number;
   couponCode: string | null;
+  couponId: string | null;
   items: OrderItemMutationInput[];
 }
+
+export type CouponPreviewResult = {
+  valid: boolean;
+  code?: string;
+  discount?: number;
+  message?: string;
+};
 
 function roundMoney(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
@@ -158,6 +166,28 @@ function calculateDiscount(coupon: CouponRecord, subtotal: number): number {
       ? subtotal * (coupon.discountValue / 100)
       : coupon.discountValue;
   return roundMoney(Math.min(subtotal, Math.max(0, raw)));
+}
+
+export async function previewCoupon(
+  provider: DataProvider,
+  code: string,
+  subtotal: number,
+  now = Date.now()
+): Promise<CouponPreviewResult> {
+  const requested = code.trim().toUpperCase();
+  if (!requested) return { valid: false, message: "Enter a coupon code." };
+  const coupons = await provider.listCoupons({ active: true, search: requested });
+  const coupon = coupons.find((candidate) => candidate.code.toUpperCase() === requested);
+  if (!coupon || !couponIsCurrent(coupon, now)) {
+    return { valid: false, message: "That coupon is invalid or has expired." };
+  }
+  try {
+    const discount = calculateDiscount(coupon, subtotal);
+    return { valid: true, code: coupon.code, discount };
+  } catch (error) {
+    if (error instanceof CheckoutError) return { valid: false, message: error.message };
+    throw error;
+  }
 }
 
 async function shippingAmount(
@@ -245,6 +275,7 @@ export async function buildCheckoutQuote(
     discount,
     total: roundMoney(Math.max(0, subtotal + shipping - discount)),
     couponCode: coupon?.code ?? null,
+    couponId: coupon?.id ?? null,
     items,
   };
 }

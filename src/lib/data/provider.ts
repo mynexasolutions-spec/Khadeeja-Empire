@@ -197,6 +197,7 @@ export interface DataProvider {
   updateCoupon(id: string, input: Partial<CouponMutationInput>): Promise<CouponRecord>;
   deleteCoupon(id: string): Promise<void>;
   setCouponActive(id: string, active: boolean): Promise<CouponRecord>;
+  incrementCouponUse(couponId: string): Promise<CouponRecord>;
 
   listShippingRates(options?: ListOptions): Promise<ShippingRateRecord[]>;
   createShippingRate(input: ShippingRateMutationInput): Promise<ShippingRateRecord>;

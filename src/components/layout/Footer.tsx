@@ -10,8 +10,21 @@ import {
 import { siteConfig } from "@/content/site";
 import { NewsletterForm } from "./NewsletterForm";
 import { BrandLogo } from "./BrandLogo";
+import type { Category } from "@/types";
 
-export function Footer() {
+const fallbackShopLinks = [
+  { label: "All Products", href: "/shop" },
+  { label: "Short Kurtis", href: "/collections/short-kurtis" },
+  { label: "Co-ord Sets", href: "/collections/coord-sets" },
+  { label: "Everyday Tops", href: "/collections/everyday-tops" },
+  { label: "Dresses", href: "/collections/dresses" },
+  { label: "New Arrivals", href: "/collections/new-arrivals" },
+];
+
+export function Footer({ categories }: { categories: Category[] }) {
+  const shopLinks = categories.length
+    ? [{ label: "All Products", href: "/shop" }, ...categories.map((c) => ({ label: c.name, href: `/collections/${c.slug}` }))]
+    : fallbackShopLinks;
   return (
     <footer className="bg-bg border-t border-border/40 text-ink pt-10 md:pt-14 pb-8 relative" id="contact">
       <div className="w-full max-w-[1460px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -98,36 +111,13 @@ export function Footer() {
             <div className="h-[2.5px] w-7 sm:w-8 bg-[#b89565]/70 mb-4" />
 
             <ul className="space-y-2.5 text-xs sm:text-sm text-ink/80 font-light">
-              <li>
-                <Link href="/shop" className="hover:text-[#b89565] transition-colors">
-                  All Products
-                </Link>
-              </li>
-              <li>
-                <Link href="/collections/short-kurtis" className="hover:text-[#b89565] transition-colors">
-                  Short Kurtis
-                </Link>
-              </li>
-              <li>
-                <Link href="/collections/coord-sets" className="hover:text-[#b89565] transition-colors">
-                  Co-ord Sets
-                </Link>
-              </li>
-              <li>
-                <Link href="/collections/everyday-tops" className="hover:text-[#b89565] transition-colors">
-                  Everyday Tops
-                </Link>
-              </li>
-              <li>
-                <Link href="/collections/dresses" className="hover:text-[#b89565] transition-colors">
-                  Dresses
-                </Link>
-              </li>
-              <li>
-                <Link href="/collections/new-arrivals" className="hover:text-[#b89565] transition-colors">
-                  New Arrivals
-                </Link>
-              </li>
+              {shopLinks.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="hover:text-[#b89565] transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 

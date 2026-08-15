@@ -23,6 +23,7 @@ interface ShopCatalogProps {
   categories: Category[];
   initialCategory?: string;
   titleOverride?: string;
+  priceUnder?: number;
 }
 
 const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
@@ -37,27 +38,20 @@ const COLOR_SWATCHES = [
 ];
 const ALL_FABRICS = ["Pure Cotton", "Banarasi Silk", "Linen Blend", "Chiffon", "Georgette"];
 
-const CATEGORY_TABS = [
-  { slug: "all", name: "All" },
-  { slug: "short-kurtis", name: "Short Kurtis" },
-  { slug: "coord-sets", name: "Co-ord Sets" },
-  { slug: "everyday-tops", name: "Everyday Tops" },
-  { slug: "dresses", name: "Dresses" },
-  { slug: "resort-and-whites", name: "Resort & Whites" },
-  { slug: "new-arrivals", name: "New Arrivals" },
-];
-
 export function ShopCatalog({
   products,
   categories,
   initialCategory,
   titleOverride,
+  priceUnder,
 }: ShopCatalogProps) {
   // Filters State
   const [selectedTab, setSelectedTab] = useState<string>(initialCategory || "all");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
-  const [maxPrice, setMaxPrice] = useState<number>(15000);
+  const [maxPrice, setMaxPrice] = useState<number>(
+    priceUnder ?? 15000
+  );
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedFabrics, setSelectedFabrics] = useState<string[]>([]);
 
@@ -90,6 +84,14 @@ export function ShopCatalog({
     setSelectedFabrics([]);
     setCurrentPage(1);
   };
+
+  const categoryTabs = useMemo(
+    () => [
+      { slug: "all", name: "All" },
+      ...categories.map((category) => ({ slug: category.slug, name: category.name })),
+    ],
+    [categories]
+  );
 
   // Count items per category
   const categoryCounts = useMemo(() => {
@@ -238,7 +240,7 @@ export function ShopCatalog({
 
         {openSections.category && (
           <div className="flex flex-col gap-2.5 pt-3 pl-0.5">
-            {CATEGORY_TABS.filter((c) => c.slug !== "all").map((cat) => {
+            {categoryTabs.filter((c) => c.slug !== "all").map((cat) => {
               const isChecked = selectedCategories.includes(cat.slug);
               const count = categoryCounts[cat.slug] || 0;
 
@@ -509,7 +511,7 @@ export function ShopCatalog({
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pt-1">
           <div>
             <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal text-ink">
-              {titleOverride || "Shop All"}
+              {titleOverride || (priceUnder ? `Under ₹${priceUnder}` : "Shop All")}
             </h1>
           </div>
 
@@ -555,7 +557,7 @@ export function ShopCatalog({
       <div className="flex items-center justify-between gap-4 border-y border-border/60 py-3.5 overflow-x-auto no-scrollbar">
         {/* Category Pill Tabs */}
         <div className="flex items-center gap-2.5 shrink-0">
-          {CATEGORY_TABS.map((tab) => {
+          {categoryTabs.map((tab) => {
             const isActive = selectedTab === tab.slug;
             return (
               <button

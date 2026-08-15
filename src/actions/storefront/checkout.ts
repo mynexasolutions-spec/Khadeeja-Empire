@@ -11,8 +11,10 @@ import {
   checkoutInputSchema,
   checkoutOrderNumber,
   CheckoutError,
+  previewCoupon,
   publicOrder,
   type CheckoutInput,
+  type CouponPreviewResult,
 } from "./checkout-core";
 
 export type CheckoutActionResult =
@@ -23,6 +25,14 @@ export type CheckoutActionResult =
       message: string;
       fieldErrors?: Record<string, string[]>;
     };
+
+export async function previewCouponAction(code: string, subtotal: number): Promise<CouponPreviewResult> {
+  try {
+    return await previewCoupon(getDataProvider(), code, subtotal);
+  } catch {
+    return { valid: false, message: "We could not check that coupon right now. Please try again." };
+  }
+}
 
 export async function placeDemoOrder(input: CheckoutInput): Promise<CheckoutActionResult> {
   const parsed = checkoutInputSchema.safeParse(input);
@@ -92,6 +102,9 @@ export async function placeDemoOrder(input: CheckoutInput): Promise<CheckoutActi
       notes: parsed.data.notes ?? null,
       items: quote.items,
     });
+    if (quote.couponId) {
+      await provider.incrementCouponUse(quote.couponId);
+    }
     return { ok: true, order: publicOrder(order), replayed: false };
   } catch (error) {
     if (error instanceof CheckoutError) {

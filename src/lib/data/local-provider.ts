@@ -1007,6 +1007,15 @@ export class LocalDataProvider implements DataProvider {
     return this.updateCoupon(couponId, { active });
   }
 
+  async incrementCouponUse(couponId: string): Promise<CouponRecord> {
+    const state = await this.update((current) => {
+      const coupon = find(current.coupons, couponId, "Coupon");
+      coupon.usedCount = (coupon.usedCount ?? 0) + 1;
+      return current;
+    });
+    return find(state.coupons, couponId, "Coupon");
+  }
+
   async listShippingRates(options?: ListOptions): Promise<ShippingRateRecord[]> {
     const state = await this.read();
     return listRecords(state.shippingRates, options, ["name"]);

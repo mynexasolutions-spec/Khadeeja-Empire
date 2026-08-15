@@ -14,7 +14,18 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function ShopPage() {
+export default async function ShopPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const rawPriceUnder = Array.isArray(params.price_under)
+    ? params.price_under[0]
+    : params.price_under;
+
+  const priceUnder = rawPriceUnder ? Number(rawPriceUnder) : undefined;
+
   const provider = getDataProvider();
   const [productRecords, categoryRecords] = await Promise.all([
     provider.listProducts({ active: true }),
@@ -27,7 +38,11 @@ export default async function ShopPage() {
   return (
     <div className="py-8 md:py-12">
       <Container className="max-w-[1460px]">
-        <ShopCatalog products={products} categories={categories} />
+        <ShopCatalog
+          products={products}
+          categories={categories}
+          priceUnder={priceUnder}
+        />
       </Container>
     </div>
   );

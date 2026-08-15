@@ -4,10 +4,13 @@ import { useState, useTransition } from "react";
 import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { login, signup, resetPassword } from "./actions";
+import { OtpLoginForm } from "./OtpLoginForm";
 
 type AuthMode = "login" | "signup" | "forgot";
+type AuthTab = "email" | "phone";
 
 export function CustomerLoginForm({ next }: { next: string }) {
+  const [tab, setTab] = useState<AuthTab>("email");
   const [mode, setMode] = useState<AuthMode>("login");
   const [showPassword, setShowPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -52,6 +55,34 @@ export function CustomerLoginForm({ next }: { next: string }) {
     <main className="flex min-h-[75vh] items-center justify-center px-4 py-10 sm:px-6">
       <section className="w-full max-w-[480px] bg-white border border-border px-8 py-8 shadow-sm rounded-none">
         
+        {/* Tabs */}
+        <div className="grid grid-cols-2 gap-1 mb-8">
+          <button
+            type="button"
+            onClick={() => setTab("email")}
+            className={`h-10 text-sm font-semibold tracking-widest uppercase rounded-none border transition-colors ${
+              tab === "email"
+                ? "bg-[#2d2520] text-white border-[#2d2520]"
+                : "bg-white text-muted border-border hover:text-ink"
+            }`}
+          >
+            Email
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("phone")}
+            className={`h-10 text-sm font-semibold tracking-widest uppercase rounded-none border transition-colors ${
+              tab === "phone"
+                ? "bg-[#2d2520] text-white border-[#2d2520]"
+                : "bg-white text-muted border-border hover:text-ink"
+            }`}
+          >
+            Phone OTP
+          </button>
+        </div>
+
+        {tab === "email" ? (
+        <>
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-display text-ink mb-2">
@@ -182,6 +213,10 @@ export function CustomerLoginForm({ next }: { next: string }) {
             {mode === "login" ? "Sign up" : "Login"}
           </button>
         </p>
+        </>
+        ) : (
+          <OtpLoginForm next={next} />
+        )}
 
       </section>
     </main>
