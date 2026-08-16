@@ -149,9 +149,13 @@ function hydrateProduct(state: AdminDataState, product: ProductRecord): ProductR
   const images = product.images?.length
     ? product.images
     : state.images.filter((image) => image.productId === product.id);
+  const category = state.categories.find(
+    (c) => c.id === product.categoryId || c.slug === product.categorySlug
+  ) || null;
   return {
     ...product,
     images,
+    category,
     colors: product.colors ?? state.colors.filter((color) => color.productId === product.id),
     variants:
       product.variants ?? state.variants.filter((variant) => variant.productId === product.id),
@@ -287,7 +291,7 @@ export class LocalDataProvider implements DataProvider {
     const state = await this.read();
     return listRecords(state.categories, options, ["name", "slug", "description"]).map((category) => ({
       ...category,
-      productCount: state.products.filter((product) => product.categorySlug === category.slug).length,
+      productCount: state.products.filter((product) => product.categoryId === category.id || product.categorySlug === category.slug).length,
     }));
   }
 

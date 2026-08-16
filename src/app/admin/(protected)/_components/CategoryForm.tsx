@@ -21,7 +21,7 @@ export function CategoryForm({ category, categories }: { category?: CategoryReco
         <textarea className={`${inputClass} min-h-28 py-3`} name="description" defaultValue={category?.description || ""} />
       </label>
       <div className="grid gap-5 sm:grid-cols-2">
-        <MediaUpload name="image" label="Image" defaultValue={category?.image || ""} />
+        <MediaUpload name="image" label="Image" defaultValue={category?.image || ""} aspectClassName="aspect-[4/4.5] sm:aspect-3/4" folder="khadeeja/content" />
         <label className="text-sm font-medium text-stone-700">Parent category
           <select className={inputClass} name="parentId" defaultValue={category?.parentId || ""}>
             <option value="">None</option>

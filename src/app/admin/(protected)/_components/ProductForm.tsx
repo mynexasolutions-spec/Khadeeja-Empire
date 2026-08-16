@@ -1,6 +1,13 @@
+"use client";
+
+import { useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import type { CategoryRecord, ProductRecord } from "@/lib/admin/types";
 import { saveProductAction } from "@/actions/admin/products";
+import { ProductImagesUpload } from "@/components/admin/ProductImagesUpload";
+import { MediaUpload } from "@/components/admin/MediaUpload";
 
 const inputClass = "mt-1 min-h-11 w-full rounded-lg border border-stone-300 bg-white px-3 text-sm text-stone-900 outline-none transition focus:border-[#9c5247] focus:ring-2 focus:ring-[#9c5247]/20";
 
@@ -9,7 +16,33 @@ function imageUrls(product?: ProductRecord) {
 }
 
 export function ProductForm({ product, categories }: { product?: ProductRecord; categories: CategoryRecord[] }) {
-  return <form action={saveProductAction} className="space-y-7">
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const price = Number(data.get("price") || 0);
+    const oldPriceRaw = data.get("oldPrice");
+    const oldPrice = oldPriceRaw && String(oldPriceRaw).trim() !== "" ? Number(oldPriceRaw) : null;
+
+    if (oldPrice !== null && oldPrice < price) {
+      toast.error(`MRP / old price (${oldPrice}) must be greater than or equal to current price (${price}).`);
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        await saveProductAction(data);
+        toast.success(product ? "Product updated." : "Product created.");
+        if (!product) router.push("/admin/products");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Could not save the product.");
+      }
+    });
+  };
+
+  return <form onSubmit={handleSubmit} className="space-y-7">
     {product ? <input type="hidden" name="id" value={product.id} /> : null}
     <section><h2 className="mb-4 font-semibold text-stone-900">Basic information</h2><div className="grid gap-5 sm:grid-cols-2">
       <label className="text-sm font-medium text-stone-700">Product name<input className={inputClass} name="name" required defaultValue={product?.name || ""}/></label>
@@ -26,8 +59,14 @@ export function ProductForm({ product, categories }: { product?: ProductRecord; 
     <section className="border-t border-stone-100 pt-6"><h2 className="mb-4 font-semibold text-stone-900">Description and media</h2><div className="space-y-5">
       <label className="block text-sm font-medium text-stone-700">Short description<textarea className={`${inputClass} min-h-20 py-3`} name="shortDescription" defaultValue={product?.shortDescription || ""}/></label>
       <label className="block text-sm font-medium text-stone-700">Full description<textarea className={`${inputClass} min-h-36 py-3`} name="description" defaultValue={product?.description || ""}/></label>
-      <label className="block text-sm font-medium text-stone-700">Image URLs <span className="font-normal text-stone-400">(one per line; local /assets paths or Cloudinary URLs)</span><textarea className={`${inputClass} min-h-28 py-3 font-mono text-xs`} name="images" defaultValue={imageUrls(product)}/></label>
-      <div className="grid gap-5 sm:grid-cols-2"><label className="text-sm font-medium text-stone-700">Video URL<input className={inputClass} name="video" defaultValue={product?.video || ""}/></label><label className="text-sm font-medium text-stone-700">Hover image URL<input className={inputClass} name="hoverImage" defaultValue={product?.hoverImage || ""}/></label></div>
+      <div className="block text-sm font-medium text-stone-700">
+        <span className="block mb-2">Product Images</span>
+        <ProductImagesUpload name="images" defaultValue={imageUrls(product)} />
+        <p className="mt-2 text-xs font-normal text-stone-400">The 2nd image is shown automatically on hover in the shop grid — no extra upload needed.</p>
+      </div>
+      <div className="text-sm font-medium text-stone-700">
+        <MediaUpload name="video" label="Video" defaultValue={product?.video || ""} folder="khadeeja/products" />
+      </div>
     </div></section>
     <section className="border-t border-stone-100 pt-6"><h2 className="mb-4 font-semibold text-stone-900">Options and SEO</h2><div className="grid gap-5 sm:grid-cols-2">
       <label className="text-sm font-medium text-stone-700">Sizes <span className="font-normal text-stone-400">(comma separated)</span><input className={inputClass} name="sizes" defaultValue={(product?.sizes || []).join(", ")}/></label>
@@ -36,6 +75,6 @@ export function ProductForm({ product, categories }: { product?: ProductRecord; 
       <label className="text-sm font-medium text-stone-700">SEO keywords<input className={inputClass} name="seoKeywords" defaultValue={(product?.seo?.keywords || []).join(", ")}/></label>
       <label className="sm:col-span-2 text-sm font-medium text-stone-700">SEO description<textarea className={`${inputClass} min-h-20 py-3`} name="seoDescription" defaultValue={product?.seo?.description || ""}/></label>
     </div><div className="mt-5 flex flex-wrap gap-6"><label className="flex items-center gap-2 text-sm font-medium text-stone-700"><input className="h-4 w-4 accent-[#9c5247]" name="active" type="checkbox" defaultChecked={product?.active !== false}/>Active</label><label className="flex items-center gap-2 text-sm font-medium text-stone-700"><input className="h-4 w-4 accent-[#9c5247]" name="featured" type="checkbox" defaultChecked={product?.featured === true}/>Featured</label></div></section>
-    <div className="flex justify-end gap-3 border-t border-stone-100 pt-5"><Link href="/admin/products" className="inline-flex min-h-11 items-center rounded-lg border border-stone-300 px-4 text-sm font-semibold text-stone-700">Cancel</Link><button className="min-h-11 rounded-lg bg-[#9c5247] px-5 text-sm font-semibold text-white hover:bg-[#7e3f35]" type="submit">{product ? "Save changes" : "Create product"}</button></div>
+    <div className="flex justify-end gap-3 border-t border-stone-100 pt-5"><Link href="/admin/products" className="inline-flex min-h-11 items-center rounded-lg border border-stone-300 px-4 text-sm font-semibold text-stone-700">Cancel</Link><button className="min-h-11 rounded-lg bg-[#9c5247] px-5 text-sm font-semibold text-white hover:bg-[#7e3f35] disabled:cursor-wait disabled:opacity-70" type="submit" disabled={isPending}>{isPending ? "Saving…" : product ? "Save changes" : "Create product"}</button></div>
   </form>;
 }

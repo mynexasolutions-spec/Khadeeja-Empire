@@ -1,6 +1,6 @@
 import { getDataProvider } from "@/lib/data";
 import { AdminCard, EmptyState, PageHeading, StatusBadge, formatCurrency, formatDate, tableCell, tableHead } from "../_components/AdminPage";
-import { approveCustomer } from "./actions";
+import { CustomerApproveButton } from "../_components/CustomerApproveButton";
 
 export const dynamic = "force-dynamic";
 
@@ -54,11 +54,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
                       <div className="flex items-center gap-3">
                         <StatusBadge value={customer.status || "active"} />
                         {customer.status === "inactive" && (
-                          <form action={approveCustomer.bind(null, customer.id)}>
-                            <button type="submit" className="text-xs font-semibold text-blue-600 hover:underline">
-                              Approve
-                            </button>
-                          </form>
+                          <CustomerApproveButton id={customer.id} />
                         )}
                       </div>
                     </td>

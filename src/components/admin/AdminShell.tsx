@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Toaster } from "sonner";
 import { AdminHeader } from "./Header";
 import { AdminSidebar } from "./Sidebar";
 
@@ -47,6 +48,7 @@ export function AdminShell({ children, email }: { children: React.ReactNode; ema
 
   return (
     <div className="admin-shell">
+      <Toaster position="top-right" richColors closeButton />
       <a href="#admin-main" className="admin-skip-link">Skip to admin content</a>
       <AdminSidebar
         collapsed={collapsed}

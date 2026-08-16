@@ -36,11 +36,15 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   }, []);
 
   const next = useCallback(() => {
-    setCurrent((c) => (c + 1) % slideCount);
+    if (slideCount > 0) {
+      setCurrent((c) => (c + 1) % slideCount);
+    }
   }, [slideCount]);
 
   const previous = useCallback(() => {
-    setCurrent((c) => (c - 1 + slideCount) % slideCount);
+    if (slideCount > 0) {
+      setCurrent((c) => (c - 1 + slideCount) % slideCount);
+    }
   }, [slideCount]);
 
   useEffect(() => {
@@ -51,8 +55,18 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
       isManuallyPaused ||
       slideCount < 2
     ) {
+      if (timerRef.current !== null) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
       return;
     }
+    
+    // Clear old timer if any before setting a new one to avoid double rotation events
+    if (timerRef.current !== null) {
+      clearInterval(timerRef.current);
+    }
+    
     timerRef.current = setInterval(next, 5000);
     return () => {
       if (timerRef.current !== null) {
@@ -60,10 +74,12 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
         timerRef.current = null;
       }
     };
-  }, [hasFocus, isHovered, isManuallyPaused, next, reducedMotion, slideCount]);
+  }, [hasFocus, isHovered, isManuallyPaused, next, reducedMotion, slideCount, current]);
 
   useEffect(() => {
-    if (current >= slideCount && slideCount > 0) setCurrent(0);
+    if (slideCount > 0 && current >= slideCount) {
+      setCurrent(slideCount - 1);
+    }
   }, [current, slideCount]);
 
   const handleTouchStart = (e: React.TouchEvent) => {

@@ -1,16 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, User, Phone, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { login, signup, resetPassword } from "./actions";
-import { OtpLoginForm } from "./OtpLoginForm";
 
 type AuthMode = "login" | "signup" | "forgot";
-type AuthTab = "email" | "phone";
 
 export function CustomerLoginForm({ next }: { next: string }) {
-  const [tab, setTab] = useState<AuthTab>("email");
   const [mode, setMode] = useState<AuthMode>("login");
   const [showPassword, setShowPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -21,6 +18,7 @@ export function CustomerLoginForm({ next }: { next: string }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +29,7 @@ export function CustomerLoginForm({ next }: { next: string }) {
     formData.append("email", email);
     if (password) formData.append("password", password);
     if (fullName) formData.append("fullName", fullName);
+    if (phone) formData.append("phone", phone);
     if (next) formData.append("next", next);
 
     startTransition(async () => {
@@ -54,35 +53,7 @@ export function CustomerLoginForm({ next }: { next: string }) {
   return (
     <main className="flex min-h-[75vh] items-center justify-center px-4 py-10 sm:px-6">
       <section className="w-full max-w-[480px] bg-white border border-border px-8 py-8 shadow-sm rounded-none">
-        
-        {/* Tabs */}
-        <div className="grid grid-cols-2 gap-1 mb-8">
-          <button
-            type="button"
-            onClick={() => setTab("email")}
-            className={`h-10 text-sm font-semibold tracking-widest uppercase rounded-none border transition-colors ${
-              tab === "email"
-                ? "bg-[#2d2520] text-white border-[#2d2520]"
-                : "bg-white text-muted border-border hover:text-ink"
-            }`}
-          >
-            Email
-          </button>
-          <button
-            type="button"
-            onClick={() => setTab("phone")}
-            className={`h-10 text-sm font-semibold tracking-widest uppercase rounded-none border transition-colors ${
-              tab === "phone"
-                ? "bg-[#2d2520] text-white border-[#2d2520]"
-                : "bg-white text-muted border-border hover:text-ink"
-            }`}
-          >
-            Phone OTP
-          </button>
-        </div>
 
-        {tab === "email" ? (
-        <>
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-display text-ink mb-2">
@@ -110,6 +81,24 @@ export function CustomerLoginForm({ next }: { next: string }) {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Enter your full name" 
+                  className="w-full h-12 pl-12 pr-4 bg-white border border-border rounded-none focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors text-ink placeholder:text-muted/60"
+                  required
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Phone Number (Signup only) */}
+          {mode === "signup" && (
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-ink">Phone Number</label>
+              <div className="relative">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-muted h-5 w-5 stroke-[1.5]" />
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Enter your phone number"
                   className="w-full h-12 pl-12 pr-4 bg-white border border-border rounded-none focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors text-ink placeholder:text-muted/60"
                   required
                 />
@@ -213,10 +202,6 @@ export function CustomerLoginForm({ next }: { next: string }) {
             {mode === "login" ? "Sign up" : "Login"}
           </button>
         </p>
-        </>
-        ) : (
-          <OtpLoginForm next={next} />
-        )}
 
       </section>
     </main>

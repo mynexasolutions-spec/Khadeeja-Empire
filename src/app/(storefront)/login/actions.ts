@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDataProvider } from "@/lib/data";
@@ -42,41 +43,52 @@ export async function signup(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const fullName = formData.get("fullName") as string;
+  const phone = (formData.get("phone") as string) || "";
   const nextUrl = (formData.get("next") as string) || "/";
 
-  if (!email || !password || !fullName) {
+  if (!email || !password || !fullName || !phone) {
     return { error: "All fields are required." };
   }
 
-  const supabase = await createClient();
+  const adminClient = createServiceRoleClient();
 
-  const { data, error } = await supabase.auth.signUp({
+  const { data: created, error: createErr } = await adminClient.auth.admin.createUser({
     email,
     password,
-    options: {
-      data: {
-        full_name: fullName,
-      },
-    },
+    email_confirm: true,
+    user_metadata: { full_name: fullName },
   });
 
-  if (error) {
-    return { error: error.message };
+  if (createErr) {
+    if (createErr.message?.toLowerCase().includes("already been registered")) {
+      return { error: "An account with this email already exists." };
+    }
+    return { error: createErr.message };
   }
-  
-  if (data?.user?.identities?.length === 0) {
-    return { error: "An account with this email already exists." };
+  if (!created?.user) {
+    return { error: "Could not create account. Please try again." };
   }
 
   const dataProvider = getDataProvider();
-  await dataProvider.createCustomer({
-    name: fullName,
-    email: email,
-    status: "inactive",
-  });
+  try {
+    await dataProvider.createCustomer({
+      name: fullName,
+      email: email,
+      phone: phone,
+      status: "active",
+    });
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Could not create customer profile." };
+  }
 
-  await supabase.auth.signOut();
-  return { success: "Account created! Please wait for admin approval." };
+  const supabase = await createClient();
+  const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
+  if (signInErr) {
+    return { success: "Account created! You can now log in." };
+  }
+
+  revalidatePath("/", "layout");
+  redirect(nextUrl);
 }
 
 export async function resetPassword(formData: FormData) {

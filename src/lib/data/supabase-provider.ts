@@ -129,9 +129,11 @@ export class SupabaseDataProvider implements DataProvider {
   constructor(readonly client: SupabaseClient) {}
 
   private translateError(error: unknown, fallback: string): never {
+    console.error("Supabase Database Query Failure Details:", JSON.stringify(error, null, 2));
     const code = error && typeof error === "object" && "code" in error ? error.code : undefined;
     if (code === "23505") throw new ConflictError("That record already exists.");
-    throw new DataProviderError("query", fallback);
+    const msg = error && typeof error === "object" && "message" in error ? String(error.message) : null;
+    throw new DataProviderError("query", msg || fallback);
   }
 
   private async listRows<T extends object>(table: string, options?: ListOptions, fields: (keyof T)[] = []): Promise<T[]> {
@@ -153,8 +155,13 @@ export class SupabaseDataProvider implements DataProvider {
   }
 
   private async insertRow<T>(table: string, value: unknown, fallback: string): Promise<T> {
-    const result = await this.client.from(table).insert(toRow(value)).select("*").single();
-    if (result.error) this.translateError(result.error, fallback);
+    const payload = toRow(value);
+    const result = await this.client.from(table).insert(payload).select("*").single();
+    if (result.error) {
+      console.error("SQL INSERT FAILURE payload map:", JSON.stringify(payload, null, 2));
+      console.error("SQL INSERT FAILURE database error details:", JSON.stringify(result.error, null, 2));
+      this.translateError(result.error, fallback);
+    }
     return fromRow<T>(result.data);
   }
 
@@ -241,11 +248,11 @@ export class SupabaseDataProvider implements DataProvider {
 
   async createProduct(input: ProductMutationInput): Promise<ProductRecord> {
     const product = await this.insertRow<ProductRecord>("products", productRow(input), "Could not create product.");
-    for (const image of input.images ?? []) {
+    for (const [sortOrder, image] of (input.images ?? []).entries()) {
       await this.createProductImage(
         typeof image === "string"
-          ? { productId: product.id, url: image }
-          : without(image, "id")
+          ? { productId: product.id, url: image, sortOrder }
+          : { ...without(image, "id"), sortOrder }
       );
     }
     return (await this.getProduct(product.id))!;
@@ -257,9 +264,9 @@ export class SupabaseDataProvider implements DataProvider {
     if (images != null) {
       const existing = await this.listProductImages(productId);
       await Promise.all(existing.map((image) => this.deleteProductImage(image.id)));
-      for (const image of images) {
+      for (const [sortOrder, image] of images.entries()) {
         await this.createProductImage(
-          typeof image === "string" ? { productId, url: image } : without(image, "id")
+          typeof image === "string" ? { productId, url: image, sortOrder } : { ...without(image, "id"), sortOrder }
         );
       }
     }
@@ -287,7 +294,14 @@ export class SupabaseDataProvider implements DataProvider {
   }
 
   async listCategories(options?: ListOptions): Promise<CategoryRecord[]> {
-    return this.listRows<CategoryRecord>("categories", options, ["name", "slug", "description"]);
+    const [categories, products] = await Promise.all([
+      this.listRows<CategoryRecord>("categories", options, ["name", "slug", "description"]),
+      this.listRows<ProductRecord>("products"),
+    ]);
+    return categories.map((category) => ({
+      ...category,
+      productCount: products.filter((product) => product.categoryId === category.id || product.categorySlug === category.slug).length,
+    }));
   }
 
   getCategories(options?: ListOptions) {

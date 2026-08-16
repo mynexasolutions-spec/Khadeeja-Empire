@@ -98,5 +98,12 @@ export function noData<T>(result: AdminActionResult<T>): AdminActionResult {
 
 export async function finishFormAction<T>(result: Promise<AdminActionResult<T>>): Promise<void> {
   const outcome = await result;
-  if (!outcome.success) throw new Error(outcome.error ?? "The operation could not be completed.");
+  if (!outcome.success) {
+    const errorDetails = outcome.fieldErrors 
+      ? Object.entries(outcome.fieldErrors)
+          .map(([field, msgs]) => `${field}: ${msgs.join(", ")}`)
+          .join(" | ")
+      : outcome.error;
+    throw new Error(errorDetails ?? "The operation could not be completed.");
+  }
 }

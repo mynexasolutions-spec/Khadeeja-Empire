@@ -28,10 +28,37 @@ async function saveProductMutation(input: unknown, id?: string) {
   return adminMutation(async () => {
     const raw = inputObject(input, productOptions) as Record<string, unknown>;
     const recordId = id ?? (typeof raw?.id === "string" && raw.id ? raw.id : undefined);
-    const parsed = productMutationSchema.parse(raw);
-    const value = parsed as ProductMutationInput;
+    
+    // Automatically populate categorySlug/collectionSlug from categoryId/collectionId
     const provider = getDataProvider();
-    return recordId ? provider.updateProduct(parseId(recordId), value) : provider.createProduct(value);
+    if (raw.categoryId && String(raw.categoryId).trim() !== "") {
+      const category = await provider.getCategory(String(raw.categoryId));
+      if (category) {
+        raw.categorySlug = category.slug;
+      }
+    } else {
+      raw.categoryId = null;
+      raw.categorySlug = null;
+    }
+
+    if (raw.collectionId && String(raw.collectionId).trim() !== "") {
+      const collection = await provider.getCollection(String(raw.collectionId));
+      if (collection) {
+        raw.collectionSlug = collection.slug;
+      }
+    } else {
+      raw.collectionId = null;
+      raw.collectionSlug = null;
+    }
+
+    try {
+      const parsed = productMutationSchema.parse(raw);
+      const value = parsed as ProductMutationInput;
+      return recordId ? provider.updateProduct(parseId(recordId), value) : provider.createProduct(value);
+    } catch (err) {
+      console.error("Zod Validation Failure in Product Form Save:", JSON.stringify(err, null, 2));
+      throw err;
+    }
   }, paths);
 }
 

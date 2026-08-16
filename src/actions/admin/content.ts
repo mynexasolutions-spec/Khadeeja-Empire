@@ -26,7 +26,7 @@ async function saveHeroSlideMutation(input: unknown, id?: string) {
   return adminMutation(async () => {
     const raw = inputObject(input, {
       booleans: ["active"], numbers: ["sortOrder"],
-      nullable: ["subtitle", "imageAlt", "video", "cta", "ctaLink", "collectionSlug", "sortOrder"],
+      nullable: ["subtitle", "imageAlt", "video", "cta", "ctaLink", "collectionSlug"],
     }) as Record<string, unknown>;
     const slideId = recordId(raw, id);
     const value = heroSlideMutationSchema.parse(raw);
@@ -54,7 +54,7 @@ async function saveInstagramPostMutation(input: unknown, id?: string) {
   return adminMutation(async () => {
     const raw = inputObject(input, {
       booleans: ["active"], numbers: ["sortOrder"], arrays: ["hashtags"],
-      nullable: ["caption", "hashtags", "shortCode", "sourceUrl", "type", "video", "timestamp", "sortOrder"],
+      nullable: ["caption", "hashtags", "shortCode", "sourceUrl", "type", "video", "timestamp"],
     }) as Record<string, unknown>;
     const postId = recordId(raw, id);
     const value = instagramPostMutationSchema.parse(raw);
@@ -79,7 +79,7 @@ async function saveTestimonialMutation(input: unknown, id?: string) {
   return adminMutation(async () => {
     const raw = inputObject(input, {
       booleans: ["active"], numbers: ["sortOrder"],
-      nullable: ["role", "image", "active", "sortOrder"],
+      nullable: ["role", "image"],
     }) as Record<string, unknown>;
     const testimonialId = recordId(raw, id);
     const value = testimonialMutationSchema.parse(raw);
@@ -96,7 +96,7 @@ async function saveAnnouncementMutation(input: unknown, id?: string) {
   return adminMutation(async () => {
     const raw = inputObject(input, {
       booleans: ["active"], numbers: ["sortOrder"],
-      nullable: ["active", "sortOrder", "startsAt", "endsAt"],
+      nullable: ["startsAt", "endsAt"],
     }) as Record<string, unknown>;
     const announcementId = recordId(raw, id);
     const value = announcementMutationSchema.parse(raw);
@@ -116,7 +116,7 @@ async function reorderAnnouncementsMutation(input: unknown) {
 async function saveFaqMutation(input: unknown, id?: string) {
   return adminMutation(async () => {
     const raw = inputObject(input, {
-      booleans: ["active"], numbers: ["sortOrder"], nullable: ["category", "active", "sortOrder"],
+      booleans: ["active"], numbers: ["sortOrder"], nullable: ["category"],
     }) as Record<string, unknown>;
     const faqId = recordId(raw, id);
     const value = faqMutationSchema.parse(raw);
