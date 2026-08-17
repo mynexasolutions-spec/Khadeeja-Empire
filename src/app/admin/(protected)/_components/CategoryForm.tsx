@@ -1,4 +1,9 @@
+"use client";
+
+import { useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import type { CategoryRecord } from "@/lib/admin/types";
 import { saveCategoryAction } from "@/actions/admin/categories";
 import { MediaUpload } from "@/components/admin/MediaUpload";
@@ -6,8 +11,26 @@ import { MediaUpload } from "@/components/admin/MediaUpload";
 const inputClass = "mt-1 min-h-11 w-full rounded-lg border border-stone-300 bg-white px-3 text-sm text-stone-900 outline-none transition focus:border-[#9c5247] focus:ring-2 focus:ring-[#9c5247]/20";
 
 export function CategoryForm({ category, categories }: { category?: CategoryRecord; categories: CategoryRecord[] }) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+
+    startTransition(async () => {
+      try {
+        await saveCategoryAction(data);
+        toast.success(category ? "Category updated." : "Category created.");
+        if (!category) router.push("/admin/categories");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Could not save the category.");
+      }
+    });
+  };
+
   return (
-    <form action={saveCategoryAction} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {category ? <input type="hidden" name="id" value={category.id} /> : null}
       <div className="grid gap-5 sm:grid-cols-2">
         <label className="text-sm font-medium text-stone-700">Name
@@ -39,7 +62,7 @@ export function CategoryForm({ category, categories }: { category?: CategoryReco
       </div>
       <div className="flex justify-end gap-3 border-t border-stone-100 pt-5">
         <Link href="/admin/categories" className="inline-flex min-h-11 items-center rounded-lg border border-stone-300 px-4 text-sm font-semibold text-stone-700">Cancel</Link>
-        <button className="min-h-11 rounded-lg bg-[#9c5247] px-5 text-sm font-semibold text-white hover:bg-[#7e3f35]" type="submit">{category ? "Save changes" : "Create category"}</button>
+        <button className="min-h-11 rounded-lg bg-[#9c5247] px-5 text-sm font-semibold text-white hover:bg-[#7e3f35] disabled:cursor-wait disabled:opacity-70" type="submit" disabled={isPending}>{isPending ? "Saving…" : category ? "Save changes" : "Create category"}</button>
       </div>
     </form>
   );
