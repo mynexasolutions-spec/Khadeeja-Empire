@@ -5,9 +5,11 @@ import { usePathname } from "next/navigation";
 import { Home, Search, ShoppingBag, Heart, User } from "lucide-react";
 import { useUI } from "@/hooks/useUI";
 import { useWishlist } from "@/hooks/useWishlist";
+import type { CustomerSummary } from "./Header";
 
-export function MobileBottomNav() {
+export function MobileBottomNav({ customer }: { customer: CustomerSummary }) {
   const pathname = usePathname();
+  const accountHref = customer ? "/account/orders" : "/login";
   const { openSearch } = useUI();
   const { itemCount } = useWishlist();
 
@@ -64,14 +66,14 @@ export function MobileBottomNav() {
           </span>
         </Link>
 
-        <Link 
-          href="/login" 
-          className={`relative flex flex-col items-center justify-center w-full h-full space-y-0.5 ${pathname === '/login' || pathname === '/account' ? 'text-ink' : 'text-muted hover:text-ink transition-colors'}`}
+        <Link
+          href={accountHref}
+          className={`relative flex flex-col items-center justify-center w-full h-full space-y-0.5 ${pathname === '/login' || pathname.startsWith('/account') ? 'text-ink' : 'text-muted hover:text-ink transition-colors'}`}
         >
-          <User size={22} strokeWidth={pathname === '/login' || pathname === '/account' ? 1.75 : 1.5} />
+          <User size={22} strokeWidth={pathname === '/login' || pathname.startsWith('/account') ? 1.75 : 1.5} />
           <span className="text-[10px] sm:text-[11px] font-medium tracking-wide relative pb-0.5">
-            Person
-            {(pathname === '/login' || pathname === '/account') && <div className="absolute -bottom-[1px] left-1/2 -translate-x-1/2 w-6 h-[2px] bg-[#a46e38] rounded-full" />}
+            {customer ? "Account" : "Person"}
+            {(pathname === '/login' || pathname.startsWith('/account')) && <div className="absolute -bottom-[1px] left-1/2 -translate-x-1/2 w-6 h-[2px] bg-[#a46e38] rounded-full" />}
           </span>
         </Link>
       </div>

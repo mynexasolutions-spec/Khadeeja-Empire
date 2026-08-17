@@ -13,8 +13,9 @@ import { MobileNav } from "./MobileNav";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { ToastContainer } from "@/components/ui/Toast";
 import type { Category, Product } from "@/types";
+import type { CustomerSummary } from "./Header";
 
-export function StoreShell({ children, announcements, products, categories, discoveryLinks }: { children: ReactNode; announcements: string[]; products: Product[]; categories: Category[]; discoveryLinks: {label:string;href:string}[] }) {
+export function StoreShell({ children, announcements, products, categories, discoveryLinks, customer }: { children: ReactNode; announcements: string[]; products: Product[]; categories: Category[]; discoveryLinks: {label:string;href:string}[]; customer: CustomerSummary }) {
   return (
     <WishlistProvider>
       <CartProvider>
@@ -23,13 +24,13 @@ export function StoreShell({ children, announcements, products, categories, disc
             Skip to content
           </a>
           <AnnouncementBar messages={announcements} />
-          <Header discoveryLinks={discoveryLinks} categories={categories} />
+          <Header discoveryLinks={discoveryLinks} categories={categories} customer={customer} />
           <main id="main-content">{children}</main>
           <Footer categories={categories} />
           <SearchDrawer products={products} />
           <CartDrawer />
           <MobileNav categories={categories} />
-          <MobileBottomNav />
+          <MobileBottomNav customer={customer} />
           <ToastContainer />
         </UIProvider>
       </CartProvider>

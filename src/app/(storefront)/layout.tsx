@@ -1,6 +1,7 @@
 import { StoreShell } from "@/components/layout/StoreShell";
 import { getDataProvider } from "@/lib/data";
 import { toStorefrontCategory, toStorefrontProduct } from "@/lib/storefront/adapters";
+import { getCurrentCustomer } from "@/lib/auth/customer";
 
 export const dynamic = "force-dynamic";
 
@@ -11,11 +12,12 @@ export default async function StorefrontLayout({
 }) {
   const now = Date.now();
   const provider = getDataProvider();
-  const [announcementRecords, productRecords, categoryRecords, discoveryRecords] = await Promise.all([
+  const [announcementRecords, productRecords, categoryRecords, discoveryRecords, customer] = await Promise.all([
     provider.listAnnouncements({ active: true }),
     provider.listProducts({ active: true }),
     provider.listCategories({ active: true }),
     provider.listDiscoveryMenuEntries({ active: true }),
+    getCurrentCustomer(),
   ]);
   const announcements = announcementRecords
     .filter((item) => {
@@ -27,5 +29,17 @@ export default async function StorefrontLayout({
 
   const categories = categoryRecords.map(toStorefrontCategory);
   const discoveryLinks = discoveryRecords.map((entry) => ({ label: entry.label, href: entry.href }));
-  return <StoreShell announcements={announcements} products={productRecords.map(toStorefrontProduct)} categories={categories} discoveryLinks={discoveryLinks}>{children}</StoreShell>;
+  const customerSummary = customer ? { name: customer.name ?? null, email: customer.email ?? null } : null;
+
+  return (
+    <StoreShell
+      announcements={announcements}
+      products={productRecords.map(toStorefrontProduct)}
+      categories={categories}
+      discoveryLinks={discoveryLinks}
+      customer={customerSummary}
+    >
+      {children}
+    </StoreShell>
+  );
 }

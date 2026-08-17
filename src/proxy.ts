@@ -2,7 +2,12 @@ import { NextResponse, type NextRequest } from "next/server";
 import { ConfigurationError } from "./lib/admin/errors";
 import { getAdminAuthConfig } from "./lib/auth/config";
 import { refreshSupabaseSession } from "./lib/auth/supabase-middleware";
-import { ADMIN_SESSION_COOKIE, verifyAdminSession } from "./lib/auth/session";
+import {
+  ADMIN_SESSION_COOKIE,
+  createSessionCookieOptions,
+  signAdminSession,
+  verifyAdminSession,
+} from "./lib/auth/session";
 
 export const config = {
   matcher: ["/admin/:path*", "/api/admin/:path*"],
@@ -51,6 +56,16 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
     return NextResponse.redirect(loginUrl);
   }
+
+  // Sliding session: renew the admin cookie's expiry on every authenticated
+  // request so an active admin never gets logged out mid-session.
+  const now = Date.now();
+  const refreshedToken = await signAdminSession({ email: session.email }, config, now);
+  response.cookies.set(
+    ADMIN_SESSION_COOKIE,
+    refreshedToken,
+    createSessionCookieOptions(new Date(now + config.sessionTtlSeconds * 1_000))
+  );
 
   response = await refreshSupabaseSession(request, response);
   return response;

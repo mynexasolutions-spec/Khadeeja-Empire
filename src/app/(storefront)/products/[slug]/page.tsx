@@ -15,6 +15,8 @@ import {
 import { getDataProvider } from "@/lib/data";
 import { toStorefrontProduct } from "@/lib/storefront/adapters";
 import { formatPrice } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/server";
+import { ProductReviews } from "@/components/product/ProductReviews";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -50,6 +52,10 @@ export default async function ProductPage({ params }: PageProps) {
     .slice(0, 4)
     .map(toStorefrontProduct);
 
+  const reviews = (await provider.listReviews()).filter((r) => r.productId === record.id);
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <div className="py-12 md:py-16">
       <Container>
@@ -76,7 +82,7 @@ export default async function ProductPage({ params }: PageProps) {
         <div className="grid gap-10 md:grid-cols-2 md:gap-14">
           {/* LEFT COLUMN: Gallery + Size Reference */}
           <div className="flex flex-col">
-            <ProductGallery images={product.images} productName={product.name} />
+            <ProductGallery images={product.images} video={product.video} productName={product.name} />
             <SizeReference
               measurements={record.information?.measurements ?? DEFAULT_SIZE_CHART_MEASUREMENTS}
             />
@@ -125,6 +131,14 @@ export default async function ProductPage({ params }: PageProps) {
         <SizeChart
           measurements={record.information?.measurements ?? DEFAULT_SIZE_CHART_MEASUREMENTS}
           modalOnly
+        />
+
+        {/* Reviews */}
+        <ProductReviews
+          productId={record.id}
+          productSlug={product.slug}
+          reviews={reviews}
+          isLoggedIn={Boolean(user)}
         />
 
         {/* Related Products */}

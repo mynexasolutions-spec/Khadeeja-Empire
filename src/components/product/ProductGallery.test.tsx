@@ -52,4 +52,17 @@ describe("ProductGallery", () => {
     const thumbStrip = container.querySelector('[aria-label="Choose product image"]');
     expect(thumbStrip).toBeNull();
   });
+
+  it("adds the product video as an extra slide alongside the images", () => {
+    const { getAllByLabelText, container } = render(
+      <ProductGallery images={["/front.jpg", "/back.jpg"]} video="/clip.mp4" productName="Silk kurti" />
+    );
+
+    const videoThumb = getAllByLabelText("Show product video")[0];
+    expect(videoThumb).toBeDefined();
+
+    fireEvent.click(videoThumb);
+    const mainVideo = container.querySelector("video[src='/clip.mp4']");
+    expect(mainVideo).not.toBeNull();
+  });
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ShoppingBag, Ruler, Scissors, Truck, RotateCcw } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { useUI } from "@/hooks/useUI";
@@ -15,19 +16,31 @@ interface ProductActionsProps {
 export function ProductActions({ product }: ProductActionsProps) {
   const { addItem } = useCart();
   const { openCart } = useUI();
+  const router = useRouter();
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
   const [error, setError] = useState("");
 
-  const handleAddToBag = () => {
+  const validateSize = () => {
     if (product.sizes.length > 0 && !selectedSize) {
       setError("Please select a size");
-      return;
+      return false;
     }
     setError("");
+    return true;
+  };
+
+  const handleAddToBag = () => {
+    if (!validateSize()) return;
     addItem(product, selectedSize || "One Size", quantity);
     showToast(`${product.name} added to your bag`);
     openCart();
+  };
+
+  const handleBuyNow = () => {
+    if (!validateSize()) return;
+    addItem(product, selectedSize || "One Size", quantity);
+    router.push("/checkout");
   };
 
   return (
@@ -124,8 +137,9 @@ export function ProductActions({ product }: ProductActionsProps) {
           <ShoppingBag size={18} strokeWidth={1.5} />
           Add to Bag
         </button>
-        <a
-          href="/checkout"
+        <button
+          type="button"
+          onClick={handleBuyNow}
           className="h-12 flex items-center justify-center gap-2 rounded-sm font-semibold text-sm uppercase tracking-wide border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
           style={{
             borderColor: "var(--color-maroon)",
@@ -140,7 +154,7 @@ export function ProductActions({ product }: ProductActionsProps) {
           }
         >
           Buy Now
-        </a>
+        </button>
       </div>
 
       <div className="grid grid-cols-3 gap-4 mt-2 py-4 px-5 rounded-md border border-border bg-surface">

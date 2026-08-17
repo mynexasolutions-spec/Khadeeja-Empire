@@ -70,7 +70,7 @@ export function ProductImagesUpload({ name, defaultValue = "" }: { name: string;
       
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-5">
         {images.map((url, idx) => (
-          <div key={idx} className="group relative aspect-3/4 overflow-hidden rounded-lg border border-stone-200 bg-stone-50">
+          <div key={idx} className="group relative aspect-9/16 overflow-hidden rounded-lg border border-stone-200 bg-stone-50">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={url} alt={`Preview ${idx + 1}`} className="h-full w-full object-cover" />
             <button
@@ -90,7 +90,7 @@ export function ProductImagesUpload({ name, defaultValue = "" }: { name: string;
         
         <div 
           onClick={() => inputRef.current?.click()}
-          className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-stone-300 bg-white hover:border-[#9c5247] hover:bg-stone-50 transition"
+          className="flex aspect-9/16 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-stone-300 bg-white hover:border-[#9c5247] hover:bg-stone-50 transition"
         >
           <Upload className="h-5 w-5 text-stone-400" />
           <span className="mt-1 text-xs font-semibold text-stone-600">Upload Images</span>

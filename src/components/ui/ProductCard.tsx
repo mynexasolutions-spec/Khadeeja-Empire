@@ -34,7 +34,7 @@ export function ProductCard({
   const { addItem } = useCart();
   const { hasItem, addItem: addWishlist, removeItem: removeWishlist } = useWishlist();
   const { openCart } = useUI();
-  const hoverImage = product.images[1];
+  const hoverImage = product.hoverImage || product.images[1];
 
   const isWishlisted = hasItem(product.id);
 

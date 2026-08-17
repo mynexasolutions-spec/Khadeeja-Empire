@@ -48,17 +48,17 @@ export function MediaUpload({
         </div>
       ) : null}
 
-      <div className="flex min-h-11 w-full items-center justify-between rounded-lg border border-stone-300 bg-white px-3 py-1">
+      <div className="flex min-h-11 w-full flex-wrap items-center gap-2 rounded-lg border border-stone-300 bg-white px-3 py-2">
         {value ? (
-          <span className="text-sm text-stone-900 truncate max-w-[180px] sm:max-w-[240px]" title={value}>
+          <span className="min-w-0 flex-1 truncate text-sm text-stone-900" title={value}>
             {value.split("/").pop()}
           </span>
         ) : (
-          <span className="text-sm text-stone-400">No file uploaded</span>
+          <span className="min-w-0 flex-1 truncate text-sm text-stone-400">No file uploaded</span>
         )}
-        <div 
+        <div
           onClick={() => inputRef.current?.click()}
-          className="cursor-pointer rounded-md bg-[#9c5247]/10 px-3 py-1.5 text-xs font-semibold text-[#9c5247] hover:bg-[#9c5247]/20 transition"
+          className="shrink-0 cursor-pointer rounded-md bg-[#9c5247]/10 px-3 py-1.5 text-xs font-semibold text-[#9c5247] hover:bg-[#9c5247]/20 transition"
         >
           Upload
           <input

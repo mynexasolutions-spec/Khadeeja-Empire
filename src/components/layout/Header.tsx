@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, Menu, Search, ShoppingBag, User, Heart } from "lucide-react";
+import { ChevronDown, Menu, Search, ShoppingBag, User, Heart, Package, LogOut } from "lucide-react";
 import { useUI } from "@/hooks/useUI";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
@@ -11,16 +11,32 @@ import { siteConfig } from "@/content/site";
 import { cn } from "@/lib/utils";
 import { IconButton } from "@/components/ui/IconButton";
 import { BrandLogo } from "./BrandLogo";
+import { logout } from "@/app/(storefront)/login/actions";
 import type { Category } from "@/types";
 
-export function Header({ discoveryLinks, categories }: { discoveryLinks: { label: string; href: string }[]; categories: Category[] }) {
+export type CustomerSummary = { name: string | null; email: string | null } | null;
+
+export function Header({ discoveryLinks, categories, customer }: { discoveryLinks: { label: string; href: string }[]; categories: Category[]; customer: CustomerSummary }) {
   const pathname = usePathname();
   const { openSearch, openCart, openMobileNav } = useUI();
   const { itemCount } = useCart();
   const { itemCount: wishlistCount } = useWishlist();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const accountMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (accountMenuRef.current && !accountMenuRef.current.contains(event.target as Node)) {
+        setAccountMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [accountMenuOpen]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -232,13 +248,62 @@ export function Header({ discoveryLinks, categories }: { discoveryLinks: { label
             <Search className="h-[18px] w-[18px] md:h-5 md:w-5 stroke-[1.5]" aria-hidden="true" />
           </IconButton>
           
-          <Link
-            href="/login"
-            aria-label="Account"
-            className="w-10 h-10 md:w-[46px] md:h-[46px] rounded-full bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-[#d8b88d]/20 hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 text-ink hover:text-primary transition-all duration-300 active:scale-95 items-center justify-center shrink-0 hidden sm:flex"
-          >
-            <User className="h-[18px] w-[18px] md:h-5 md:w-5 stroke-[1.5]" aria-hidden="true" />
-          </Link>
+          {customer ? (
+            <div className="relative hidden sm:block" ref={accountMenuRef}>
+              <button
+                type="button"
+                onClick={() => setAccountMenuOpen((open) => !open)}
+                aria-label="Account menu"
+                aria-haspopup="true"
+                aria-expanded={accountMenuOpen}
+                className="w-10 h-10 md:w-[46px] md:h-[46px] rounded-full bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-[#d8b88d]/20 hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 text-ink hover:text-primary transition-all duration-300 active:scale-95 flex items-center justify-center shrink-0"
+              >
+                <User className="h-[18px] w-[18px] md:h-5 md:w-5 stroke-[1.5]" aria-hidden="true" />
+              </button>
+
+              {accountMenuOpen && (
+                <div className="absolute right-0 top-full z-20 pt-3 animate-in fade-in-80 slide-in-from-top-2 duration-200">
+                  <div className="bg-surface/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl min-w-[220px] p-2.5">
+                    <div className="px-4 pt-2 pb-3 border-b border-border/40">
+                      <p className="text-xs font-semibold text-ink truncate">{customer.name || "Your Account"}</p>
+                      {customer.email && <p className="text-[11px] text-muted truncate">{customer.email}</p>}
+                    </div>
+                    <ul className="flex flex-col pt-1.5">
+                      <li>
+                        <Link
+                          href="/account/orders"
+                          onClick={() => setAccountMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-medium tracking-wide text-ink hover:bg-primary/5 hover:text-primary transition-all duration-200"
+                        >
+                          <Package size={15} strokeWidth={1.5} />
+                          My Orders
+                        </Link>
+                      </li>
+                      <li>
+                        <form action={logout}>
+                          <button
+                            type="submit"
+                            className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-medium tracking-wide text-ink hover:bg-primary/5 hover:text-primary transition-all duration-200"
+                          >
+                            <LogOut size={15} strokeWidth={1.5} />
+                            Logout
+                          </button>
+                        </form>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              aria-label="Account"
+              className="w-10 h-10 md:w-[46px] md:h-[46px] rounded-full bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-[#d8b88d]/20 hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 text-ink hover:text-primary transition-all duration-300 active:scale-95 items-center justify-center shrink-0 hidden sm:flex"
+            >
+              <User className="h-[18px] w-[18px] md:h-5 md:w-5 stroke-[1.5]" aria-hidden="true" />
+            </Link>
+          )}
 
           <Link
             href="/wishlist"

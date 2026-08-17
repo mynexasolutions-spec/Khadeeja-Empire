@@ -2,6 +2,21 @@ import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import type { Product } from "@/types";
 import { ProductCard } from "./ProductCard";
+import { CartProvider } from "@/hooks/useCart";
+import { WishlistProvider } from "@/hooks/useWishlist";
+import { UIProvider } from "@/hooks/useUI";
+
+function renderCard(product: Product) {
+  return render(
+    <UIProvider>
+      <WishlistProvider>
+        <CartProvider>
+          <ProductCard product={product} />
+        </CartProvider>
+      </WishlistProvider>
+    </UIProvider>
+  );
+}
 
 const product = {
   id: "product-1",
@@ -25,23 +40,29 @@ const product = {
 } satisfies Product;
 
 describe("ProductCard", () => {
-  it("uses the second product image for the hover swap", () => {
-    const { container } = render(<ProductCard product={product} />);
+  it("prefers the dedicated hover image over the second gallery image", () => {
+    const { container } = renderCard(product);
     const images = container.querySelectorAll("img");
 
     expect(images).toHaveLength(2);
     expect(images[0].getAttribute("src")).toContain("front.jpg");
     expect(images[0].className).toContain("group-hover:opacity-0");
-    expect(images[1].getAttribute("src")).toContain("back.jpg");
+    expect(images[1].getAttribute("src")).toContain("legacy-hover.jpg");
     expect(images[1].className).toContain("group-hover:opacity-100");
     expect(container.innerHTML).not.toContain("product-video.mp4");
-    expect(container.innerHTML).not.toContain("legacy-hover.jpg");
+    expect(container.innerHTML).not.toContain("back.jpg");
   });
 
-  it("renders no hover layer when the product has only one image", () => {
-    const { container } = render(
-      <ProductCard product={{ ...product, images: ["/front.jpg"] }} />
-    );
+  it("falls back to the second product image when no hover image is set", () => {
+    const { container } = renderCard({ ...product, hoverImage: undefined });
+    const images = container.querySelectorAll("img");
+
+    expect(images).toHaveLength(2);
+    expect(images[1].getAttribute("src")).toContain("back.jpg");
+  });
+
+  it("renders no hover layer when the product has only one image and no hover image", () => {
+    const { container } = renderCard({ ...product, images: ["/front.jpg"], hoverImage: undefined });
     const images = container.querySelectorAll("img");
 
     expect(images).toHaveLength(1);

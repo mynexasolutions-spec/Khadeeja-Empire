@@ -62,10 +62,11 @@ export function ProductForm({ product, categories }: { product?: ProductRecord; 
       <div className="block text-sm font-medium text-stone-700">
         <span className="block mb-2">Product Images</span>
         <ProductImagesUpload name="images" defaultValue={imageUrls(product)} />
-        <p className="mt-2 text-xs font-normal text-stone-400">The 2nd image is shown automatically on hover in the shop grid — no extra upload needed.</p>
+        <p className="mt-2 text-xs font-normal text-stone-400">Upload a Hover Image below to control the shop-grid hover swap directly, or leave it empty to fall back to the 2nd image above.</p>
       </div>
-      <div className="text-sm font-medium text-stone-700">
-        <MediaUpload name="video" label="Video" defaultValue={product?.video || ""} folder="khadeeja/products" />
+      <div className="grid grid-cols-2 gap-5 sm:max-w-sm">
+        <MediaUpload name="hoverImage" label="Hover Image" defaultValue={product?.hoverImage || ""} folder="khadeeja/products" aspectClassName="aspect-9/16" />
+        <MediaUpload name="video" label="Video" defaultValue={product?.video || ""} folder="khadeeja/products" aspectClassName="aspect-9/16" />
       </div>
     </div></section>
     <section className="border-t border-stone-100 pt-6"><h2 className="mb-4 font-semibold text-stone-900">Options and SEO</h2><div className="grid gap-5 sm:grid-cols-2">

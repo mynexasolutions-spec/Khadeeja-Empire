@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
-import { placeDemoOrder, previewCouponAction, type CheckoutActionResult } from "@/actions/storefront/checkout";
+import { placeOrder, previewCouponAction, type CheckoutActionResult } from "@/actions/storefront/checkout";
 import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/Button";
 import { formatPrice } from "@/lib/utils";
@@ -30,7 +30,7 @@ const schema = z.object({
 
 type Confirmation = Extract<CheckoutActionResult, { ok: true }>["order"];
 
-export function CheckoutForm() {
+export function CheckoutForm({ lockedEmail = null }: { lockedEmail?: string | null } = {}) {
   const router = useRouter();
   const { items, subtotal, itemCount, removeItem, updateQuantity, isHydrated, clearCart } = useCart();
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
@@ -39,7 +39,7 @@ export function CheckoutForm() {
   const [pending, startTransition] = useTransition();
   const [couponPending, startCouponTransition] = useTransition();
   const attemptKey = useRef<string>("");
-  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", address2: "", city: "", state: "", pincode: "", couponCode: "" });
+  const [form, setForm] = useState({ name: "", email: lockedEmail ?? "", phone: "", address: "", address2: "", city: "", state: "", pincode: "", couponCode: "" });
   const [appliedCode, setAppliedCode] = useState<string | null>(null);
   const [couponDiscount, setCouponDiscount] = useState<number | null>(null);
   const [couponMessage, setCouponMessage] = useState("");
@@ -61,7 +61,7 @@ export function CheckoutForm() {
     setSubmitError("");
     if (!attemptKey.current) attemptKey.current = crypto.randomUUID();
     startTransition(async () => {
-      const result = await placeDemoOrder({
+      const result = await placeOrder({
         idempotencyKey: attemptKey.current,
         items: items.map((item) => ({ productId: item.product.id, quantity: item.quantity, size: item.size || undefined })),
         customer: { name: parsed.data.name, email: parsed.data.email },
@@ -112,14 +112,14 @@ export function CheckoutForm() {
         </div>
         <h2 className="text-3xl font-display font-medium text-ink mb-3 text-center">Order Confirmed</h2>
         <p className="text-muted text-center mb-8">
-          Your demo order <strong className="text-ink font-semibold">#{confirmation.orderNumber}</strong> has been successfully placed.
+          Your order <strong className="text-ink font-semibold">#{confirmation.orderNumber}</strong> has been successfully placed.
         </p>
         <div className="w-full bg-white rounded-2xl p-6 border border-[#d8b88d]/20 shadow-sm mb-8 text-center">
           <p className="text-sm text-muted">
-            Mock payment successful. No real payment method or financial details were collected.
+            Pay in cash when your order is delivered.
           </p>
           <div className="mt-4 pt-4 border-t border-[#d8b88d]/20 flex justify-between items-center max-w-xs mx-auto">
-            <span className="font-medium text-ink">Total Paid</span>
+            <span className="font-medium text-ink">Amount Due (COD)</span>
             <span className="font-bold text-xl text-ink">{formatPrice(confirmation.total, confirmation.currency)}</span>
           </div>
         </div>
@@ -148,20 +148,22 @@ export function CheckoutForm() {
     );
   }
 
-  const field = (name: keyof typeof form, label: string, type = "text", placeholder = "", icon?: React.ReactNode, fullWidth = false) => (
+  const field = (name: keyof typeof form, label: string, type = "text", placeholder = "", icon?: React.ReactNode, fullWidth = false, locked = false) => (
     <div className={`flex flex-col gap-1.5 w-full ${fullWidth ? "md:col-span-3" : ""}`}>
       <label htmlFor={name} className="text-[14px] md:text-[15px] font-bold text-ink/80 mb-0.5">{label}</label>
       <div className="relative">
-        <input 
-          id={name} 
-          name={name} 
-          type={type} 
+        <input
+          id={name}
+          name={name}
+          type={type}
           placeholder={placeholder}
-          value={form[name]} 
-          onChange={(event)=>setForm({...form,[name]:event.target.value})} 
-          aria-invalid={!!errors[name]} 
-          aria-describedby={errors[name]?`${name}-error`:undefined} 
-          className="w-full border-[1px] border-[#6f302a] rounded-none bg-white px-4 py-3.5 text-[14px] text-ink outline-none transition-all focus:ring-1 focus:ring-[#6f302a] placeholder:text-muted/60"
+          value={form[name]}
+          onChange={(event)=>setForm({...form,[name]:event.target.value})}
+          readOnly={locked}
+          aria-readonly={locked || undefined}
+          aria-invalid={!!errors[name]}
+          aria-describedby={errors[name]?`${name}-error`:undefined}
+          className={`w-full border-[1px] border-[#6f302a] rounded-none px-4 py-3.5 text-[14px] text-ink outline-none transition-all focus:ring-1 focus:ring-[#6f302a] placeholder:text-muted/60 ${locked ? "bg-[#fcfaf7] cursor-not-allowed text-muted" : "bg-white"}`}
         />
         {icon && (
           <div className="absolute right-4 top-1/2 -translate-y-1/2 text-muted/60">
@@ -198,7 +200,7 @@ export function CheckoutForm() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {field("name", "Full Name", "text", "Enter your full name", <User size={16} />)}
-            {field("email", "Email Address", "email", "Enter your email", <Mail size={16} />)}
+            {field("email", "Email Address", "email", "Enter your email", <Mail size={16} />, false, Boolean(lockedEmail))}
             {field("phone", "Phone Number", "tel", "Enter your phone number", <Phone size={16} />)}
           </div>
 
@@ -256,15 +258,15 @@ export function CheckoutForm() {
           ) : null}
         </div>
 
-        {/* Demo Payment Alert */}
+        {/* Payment Mode */}
         <div className="bg-[#fcfaf7] border border-[#d8b88d]/40 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4 shadow-sm transition-shadow hover:shadow-md">
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white border border-[#d8b88d]/30 flex items-center justify-center text-[#a27b53] shrink-0 shadow-sm">
             <Shield size={20} strokeWidth={1.5} />
           </div>
           <div>
-            <h4 className="text-[17px] sm:text-[19px] md:text-[22px] font-semibold text-dark mb-1">Demo Payment Mode</h4>
+            <h4 className="text-[17px] sm:text-[19px] md:text-[22px] font-semibold text-dark mb-1">Cash on Delivery</h4>
             <p className="text-[12px] sm:text-[13px] text-muted leading-snug">
-              No card, bank, UPI, or other real payment details are requested.
+              Pay in cash when your order arrives. No card, bank, or UPI details are requested online.
             </p>
           </div>
         </div>
@@ -283,7 +285,7 @@ export function CheckoutForm() {
             className="flex items-center justify-center gap-2 w-full bg-[#2a2420] text-white py-4.5 text-[13px] font-bold tracking-[0.1em] uppercase hover:bg-[#1a1612] transition-all shadow-md active:scale-95 disabled:opacity-70 disabled:pointer-events-none"
           >
             <Lock size={15} />
-            {pending ? "PROCESSING..." : "PLACE DEMO ORDER"}
+            {pending ? "PROCESSING..." : "PLACE ORDER"}
           </button>
           <div className="flex items-center justify-center gap-1.5 text-muted">
             <ShieldCheck size={14} />

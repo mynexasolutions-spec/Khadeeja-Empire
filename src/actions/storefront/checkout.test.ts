@@ -1,18 +1,21 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { UnauthorizedError } from "../../lib/auth/errors";
 
-const { requireCustomerMock, getDataProviderMock } = vi.hoisted(() => ({
-  requireCustomerMock: vi.fn(),
+const { getUserMock, getDataProviderMock } = vi.hoisted(() => ({
+  getUserMock: vi.fn(),
   getDataProviderMock: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
-vi.mock("../../lib/auth/server", () => ({ requireCustomer: requireCustomerMock }));
+vi.mock("../../lib/supabase/server", () => ({
+  createSupabaseServerClient: vi.fn(async () => ({ auth: { getUser: getUserMock } })),
+}));
 vi.mock("../../lib/data", () => ({ getDataProvider: getDataProviderMock }));
 
-import { placeDemoOrder, previewCouponAction } from "./checkout";
+import { placeOrder, previewCouponAction } from "./checkout";
+
+const loggedInCustomer = { id: "customer-1", email: "demo@example.com", phone: "+919876543210" };
 
 const input = {
   idempotencyKey: "checkout_attempt_123",
@@ -27,16 +30,16 @@ const input = {
   },
 };
 
-describe("placeDemoOrder", () => {
+describe("placeOrder", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    requireCustomerMock.mockResolvedValue({ customerId: "customer-1", phone: "+919876543210" });
+    getUserMock.mockResolvedValue({ data: { user: { email: "demo@example.com" } } });
   });
 
-  it("requires a signed customer session", async () => {
-    requireCustomerMock.mockRejectedValue(new UnauthorizedError());
+  it("requires a signed-in customer", async () => {
+    getUserMock.mockResolvedValue({ data: { user: null } });
 
-    await expect(placeDemoOrder(input)).resolves.toMatchObject({
+    await expect(placeOrder(input)).resolves.toMatchObject({
       ok: false,
       code: "UNAUTHENTICATED",
     });
@@ -50,8 +53,8 @@ describe("placeDemoOrder", () => {
       orderNumber: order.orderNumber,
     }));
     const data = {
+      listCustomers: vi.fn().mockResolvedValue([loggedInCustomer]),
       getOrder: vi.fn().mockResolvedValue(null),
-      getCustomer: vi.fn().mockResolvedValue({ id: "customer-1", phone: "+919876543210" }),
       updateCustomer: vi.fn().mockResolvedValue({ id: "customer-1" }),
       getProduct: vi.fn().mockResolvedValue({
         id: "product-1",
@@ -71,15 +74,15 @@ describe("placeDemoOrder", () => {
     };
     getDataProviderMock.mockReturnValue(data);
 
-    const result = await placeDemoOrder(input);
+    const result = await placeOrder(input);
 
     expect(result).toMatchObject({ ok: true, replayed: false, order: { total: 849 } });
     expect(createOrder).toHaveBeenCalledWith(
       expect.objectContaining({
         customerId: "customer-1",
         status: "confirmed",
-        paymentStatus: "paid",
-        paymentMethod: "mock_demo_payment",
+        paymentStatus: "pending",
+        paymentMethod: "cod",
         subtotal: 750,
         shipping: 99,
         total: 849,
@@ -89,6 +92,7 @@ describe("placeDemoOrder", () => {
 
   it("returns the existing customer order for an idempotent replay", async () => {
     getDataProviderMock.mockReturnValue({
+      listCustomers: vi.fn().mockResolvedValue([loggedInCustomer]),
       getOrder: vi.fn().mockResolvedValue({
         id: "order-existing",
         orderNumber: "KE-DEMO-EXISTING",
@@ -102,7 +106,7 @@ describe("placeDemoOrder", () => {
       }),
     });
 
-    await expect(placeDemoOrder(input)).resolves.toMatchObject({ ok: true, replayed: true });
+    await expect(placeOrder(input)).resolves.toMatchObject({ ok: true, replayed: true });
   });
 
   it("applies a valid coupon and increments its used count", async () => {
@@ -113,8 +117,8 @@ describe("placeDemoOrder", () => {
     }));
     const incrementCouponUse = vi.fn().mockResolvedValue({ id: "coupon-1", usedCount: 1 });
     const data = {
+      listCustomers: vi.fn().mockResolvedValue([loggedInCustomer]),
       getOrder: vi.fn().mockResolvedValue(null),
-      getCustomer: vi.fn().mockResolvedValue({ id: "customer-1", phone: "+919876543210" }),
       updateCustomer: vi.fn().mockResolvedValue({ id: "customer-1" }),
       getProduct: vi.fn().mockResolvedValue({
         id: "product-1",
@@ -145,7 +149,7 @@ describe("placeDemoOrder", () => {
     };
     getDataProviderMock.mockReturnValue(data);
 
-    const result = await placeDemoOrder({ ...input, couponCode: "save10" });
+    const result = await placeOrder({ ...input, couponCode: "save10" });
 
     expect(result).toMatchObject({ ok: true, replayed: false, order: { total: 999 } });
     expect(incrementCouponUse).toHaveBeenCalledWith("coupon-1");

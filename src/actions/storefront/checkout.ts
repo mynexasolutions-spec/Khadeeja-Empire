@@ -2,8 +2,7 @@
 
 import { z } from "zod";
 import { ConflictError } from "../../lib/admin/errors";
-import { UnauthorizedError } from "../../lib/auth/errors";
-import { requireCustomer } from "../../lib/auth/server";
+import { createSupabaseServerClient } from "../../lib/supabase/server";
 import { getDataProvider } from "../../lib/data";
 import {
   buildCheckoutQuote,
@@ -34,7 +33,7 @@ export async function previewCouponAction(code: string, subtotal: number): Promi
   }
 }
 
-export async function placeDemoOrder(input: CheckoutInput): Promise<CheckoutActionResult> {
+export async function placeOrder(input: CheckoutInput): Promise<CheckoutActionResult> {
   const parsed = checkoutInputSchema.safeParse(input);
   if (!parsed.success) {
     return {
@@ -45,19 +44,30 @@ export async function placeDemoOrder(input: CheckoutInput): Promise<CheckoutActi
     };
   }
 
-  let session;
+  let userEmail: string;
   try {
-    session = await requireCustomer();
-  } catch (error) {
-    if (error instanceof UnauthorizedError) {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user?.email) {
       return { ok: false, code: "UNAUTHENTICATED", message: "Sign in to place your order." };
     }
+    userEmail = user.email;
+  } catch {
     return { ok: false, code: "PROVIDER", message: "Checkout configuration is unavailable." };
   }
 
+  const provider = getDataProvider();
+  const customers = await provider.listCustomers({ search: userEmail });
+  const customer = customers.find((c) => c.email === userEmail);
+  if (!customer || !customer.phone) {
+    return { ok: false, code: "UNAUTHENTICATED", message: "Your customer profile is incomplete. Please contact support." };
+  }
+  const session = { customerId: customer.id, phone: customer.phone };
+
   const orderNumber = checkoutOrderNumber(session.customerId, parsed.data.idempotencyKey);
   try {
-    const provider = getDataProvider();
     const existing = await provider.getOrder(orderNumber);
     if (existing) {
       if (existing.customerId !== session.customerId) {
@@ -66,10 +76,6 @@ export async function placeDemoOrder(input: CheckoutInput): Promise<CheckoutActi
       return { ok: true, order: publicOrder(existing), replayed: true };
     }
 
-    const customer = await provider.getCustomer(session.customerId);
-    if (!customer || customer.phone !== session.phone) {
-      return { ok: false, code: "UNAUTHENTICATED", message: "Your customer session is no longer valid." };
-    }
     await provider.updateCustomer(session.customerId, {
       name: parsed.data.customer.name,
       email: parsed.data.customer.email,
@@ -89,8 +95,8 @@ export async function placeDemoOrder(input: CheckoutInput): Promise<CheckoutActi
       orderNumber,
       customerId: session.customerId,
       status: "confirmed",
-      paymentStatus: "paid",
-      paymentMethod: "mock_demo_payment",
+      paymentStatus: "pending",
+      paymentMethod: "cod",
       currency: quote.currency,
       subtotal: quote.subtotal,
       shipping: quote.shipping,
@@ -123,6 +129,6 @@ export async function placeDemoOrder(input: CheckoutInput): Promise<CheckoutActi
     if (error instanceof z.ZodError) {
       return { ok: false, code: "VALIDATION", message: "The checkout details are invalid." };
     }
-    return { ok: false, code: "PROVIDER", message: "We could not place the demo order. Please try again." };
+    return { ok: false, code: "PROVIDER", message: "We could not place your order. Please try again." };
   }
 }

@@ -286,7 +286,7 @@ export function checkoutOrderNumber(customerId: string, idempotencyKey: string):
     .digest("hex")
     .slice(0, 20)
     .toUpperCase();
-  return `KE-DEMO-${digest}`;
+  return `KE-${digest}`;
 }
 
 export function checkoutAddress(

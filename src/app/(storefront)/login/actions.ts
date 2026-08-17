@@ -91,6 +91,13 @@ export async function signup(formData: FormData) {
   redirect(nextUrl);
 }
 
+export async function logout() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  revalidatePath("/", "layout");
+  redirect("/");
+}
+
 export async function resetPassword(formData: FormData) {
   const email = formData.get("email") as string;
 

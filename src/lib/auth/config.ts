@@ -3,7 +3,7 @@ import { ConfigurationError } from "../admin/errors";
 export const AUTH_ISSUER = "khadeeja-empire";
 export const ADMIN_AUDIENCE = "admin";
 export const CUSTOMER_AUDIENCE = "customer";
-export const ADMIN_SESSION_TTL_SECONDS = 15 * 60;
+export const ADMIN_SESSION_TTL_SECONDS = 60 * 60;
 export const CUSTOMER_SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
 
 export interface AdminAuthConfig {

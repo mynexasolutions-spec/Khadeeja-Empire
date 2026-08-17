@@ -98,7 +98,7 @@ export function BehindTheAtelier() {
               const positionInSet = idx % ATELIER_IMAGES.length;
               const isCenter = positionInSet === 3 || positionInSet === 4;
               const isLeftTilt = positionInSet < 3;
-              
+
               return (
                 <div
                   key={`${img.id}-${idx}`}

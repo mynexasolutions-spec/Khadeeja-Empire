@@ -61,12 +61,12 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
       }
       return;
     }
-    
+
     // Clear old timer if any before setting a new one to avoid double rotation events
     if (timerRef.current !== null) {
       clearInterval(timerRef.current);
     }
-    
+
     timerRef.current = setInterval(next, 5000);
     return () => {
       if (timerRef.current !== null) {
